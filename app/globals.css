@@ -1,0 +1,160 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+Pro:wght@300;400;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #B50012;
+  --primary-dark: #8B000E;
+  --secondary: #1A1A1A;
+  --gold: #C9A962;
+  --cream: #F5F5F0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Source Sans Pro', sans-serif;
+  color: #1A1A1A;
+  background-color: #FFFFFF;
+  line-height: 1.6;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.font-japanese {
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.5s ease-out forwards;
+}
+
+/* Product card hover effects */
+.product-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.product-card img {
+  transition: transform 0.5s ease;
+}
+
+.product-card:hover img {
+  transform: scale(1.05);
+}
+
+/* Button styles */
+.btn-primary {
+  @apply bg-primary text-white px-6 py-3 font-semibold transition-all duration-300;
+}
+
+.btn-primary:hover {
+  @apply bg-primary-dark;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-white px-6 py-3 font-semibold transition-all duration-300;
+}
+
+.btn-secondary:hover {
+  @apply bg-secondary-light;
+}
+
+/* Image placeholder */
+.img-placeholder {
+  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+}
+
+/* Rich text content */
+.prose {
+  @apply text-gray-700 leading-relaxed;
+}
+
+.prose h2 {
+  @apply text-2xl font-display mt-8 mb-4;
+}
+
+.prose h3 {
+  @apply text-xl font-display mt-6 mb-3;
+}
+
+.prose p {
+  @apply mb-4;
+}
+
+.prose ul {
+  @apply list-disc pl-6 mb-4;
+}
+
+.prose li {
+  @apply mb-2;
+}
+
+/* Form styles */
+input, textarea, select {
+  @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  @apply flex items-center text-sm text-gray-500;
+}
+
+.breadcrumb a {
+  @apply hover:text-primary transition-colors;
+}
+
+.breadcrumb span {
+  @apply mx-2;
+}
+
+/* Loading skeleton */
+.skeleton {
+  @apply bg-gray-200 animate-pulse rounded;
+}
+
+/* Mobile menu */
+.mobile-menu {
+  @apply fixed inset-0 bg-white z-50 transform transition-transform duration-300;
+}
+
+.mobile-menu.closed {
+  @apply -translate-x-full;
+}
+
+/* Responsive container */
+.container-custom {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
