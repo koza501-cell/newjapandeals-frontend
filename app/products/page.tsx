@@ -43,8 +43,8 @@ export default function ProductsPage() {
     fetchData();
   }, []);
 
-  const brands = Array.from(new Set(products.map(p => p.brand).filter(Boolean)));
-const conditions = Array.from(new Set(products.map(p => p.condition).filter(Boolean)));
+  const brands = [...new Set(products.map(p => p.brand).filter(Boolean))];
+  const conditions = [...new Set(products.map(p => p.condition).filter(Boolean))];
 
   let filteredProducts = products.filter(p => {
     if (selectedBrand && p.brand !== selectedBrand) return false;
@@ -70,10 +70,16 @@ const conditions = Array.from(new Set(products.map(p => p.condition).filter(Bool
     }
   });
 
-  const calculateSavings = (price: number) => {
-    const proxyTotal = price + (price * 0.08) + 500 + 800 + 1000 + 3000;
-    const ourTotal = price + (price * 0.10) + 2500;
+  const calculateSavings = (price: number | string) => {
+    const p = typeof price === 'string' ? parseFloat(price) : price;
+    const proxyTotal = p + (p * 0.08) + 500 + 800 + 1000 + 3000;
+    const ourTotal = p + (p * 0.10) + 2500;
     return Math.round(proxyTotal - ourTotal);
+  };
+
+  const formatPrice = (price: number | string) => {
+    const p = typeof price === 'string' ? parseFloat(price) : price;
+    return Math.round(p).toLocaleString();
   };
 
   return (
@@ -195,7 +201,7 @@ const conditions = Array.from(new Set(products.map(p => p.condition).filter(Bool
                   {filteredProducts.map((product) => (
                     <Link 
                       key={product.id}
-                      href={`/product/${product.slug || product.id}`}
+                      href={`/products/${product.slug || product.id}`}
                       className="group bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1"
                     >
                       <div className="relative aspect-square bg-gray-100 overflow-hidden">
@@ -230,14 +236,14 @@ const conditions = Array.from(new Set(products.map(p => p.condition).filter(Bool
                         <div className="flex items-end justify-between">
                           <div>
                             <div className="text-2xl font-bold text-[#1A1A1A]">
-                              ¥{product.price_jpy.toLocaleString()}
+                              ¥{formatPrice(product.price_jpy)}
                             </div>
                             <div className="text-xs text-gray-500">
-                              ~${Math.round(product.price_jpy / 150)} USD
+                              ~${Math.round(parseFloat(String(product.price_jpy)) / 150)} USD
                             </div>
                           </div>
                           <div className="text-xs text-gray-400 text-right">
-                            <span className="line-through">Proxy: ~¥{Math.round(product.price_jpy * 1.25).toLocaleString()}</span>
+                            <span className="line-through">Proxy: ~¥{formatPrice(parseFloat(String(product.price_jpy)) * 1.25)}</span>
                           </div>
                         </div>
                       </div>
