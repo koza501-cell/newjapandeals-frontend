@@ -96,8 +96,8 @@ export default function ProductPage() {
   // Get all images
   const images = [product.image_1, product.image_2, product.image_3, product.image_4, product.image_5].filter(Boolean);
 
-  // Price calculations
-  const basePrice = product.price_jpy;
+  // Price calculations - convert string to number
+  const basePrice = parseFloat(product.price_jpy) || 0;
   const handlingFee = Math.round(basePrice * 0.10);
   const shippingFee = shippingRates[country]?.[shippingMethod]?.price || 2500;
   const totalPrice = basePrice + handlingFee + shippingFee;
@@ -191,7 +191,7 @@ export default function ProductPage() {
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
-                    <div className="text-gray-500">Via Buyee</div>
+                    <div className="text-gray-500">Via Proxy</div>
                     <div className="text-red-500 line-through font-medium">~¥{proxyTotal.toLocaleString()}</div>
                   </div>
                   <div>
