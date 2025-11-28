@@ -195,7 +195,7 @@ const conditions = Array.from(new Set(products.map(p => p.condition).filter(Bool
                   {filteredProducts.map((product) => (
                     <Link 
                       key={product.id}
-                      href={`/products/${product.slug || product.id}`}
+                      href={`/product/${product.slug || product.id}`}
                       className="group bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1"
                     >
                       <div className="relative aspect-square bg-gray-100 overflow-hidden">
