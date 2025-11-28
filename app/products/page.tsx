@@ -1,184 +1,254 @@
-import { Metadata } from 'next';
-import ProductCard from '@/components/ProductCard';
-import { getProducts, Product } from '@/lib/api';
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import TrustBar from '@/components/TrustBar';
 
-export const metadata: Metadata = {
-  title: 'All Japanese Watches | Seiko, Citizen, G-Shock & More',
-  description: 'Browse our complete collection of authentic Japanese watches. Seiko, Citizen, Casio G-Shock, Orient, vintage timepieces and more. Ships worldwide from Japan.',
-  alternates: {
-    canonical: 'https://newjapandeals.com/products',
-  },
-};
-
-interface Props {
-  searchParams: { [key: string]: string | undefined };
+interface Product {
+  id: number;
+  sku: string;
+  slug: string;
+  title_en: string;
+  title_jp: string;
+  brand: string;
+  model: string;
+  price_jpy: number;
+  condition: string;
+  image_1: string;
+  status: string;
 }
 
-export default async function ProductsPage({ searchParams }: Props) {
-  const page = parseInt(searchParams.page || '1');
-  const sort = searchParams.sort || 'newest';
-  const brand = searchParams.brand;
-  const condition = searchParams.condition;
-  
-  let products: Product[] = [];
-  let pagination = { page: 1, limit: 20, total: 0, pages: 0 };
-  
-  try {
-    const res = await getProducts({ page, sort, brand });
-    products = res.data || [];
-    pagination = res.pagination || pagination;
-  } catch (error) {
-    console.error('Error fetching products:', error);
-  }
+export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedBrand, setSelectedBrand] = useState('');
+  const [selectedCondition, setSelectedCondition] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const productsRes = await fetch('https://api.newjapandeals.com/api/products.php?status=published');
+        const productsData = await productsRes.json();
+        if (productsData.success) {
+          setProducts(productsData.products || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const brands = [...new Set(products.map(p => p.brand).filter(Boolean))];
+  const conditions = [...new Set(products.map(p => p.condition).filter(Boolean))];
+
+  let filteredProducts = products.filter(p => {
+    if (selectedBrand && p.brand !== selectedBrand) return false;
+    if (selectedCondition && p.condition !== selectedCondition) return false;
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        p.title_en?.toLowerCase().includes(query) ||
+        p.title_jp?.toLowerCase().includes(query) ||
+        p.brand?.toLowerCase().includes(query) ||
+        p.model?.toLowerCase().includes(query)
+      );
+    }
+    return true;
+  });
+
+  filteredProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortBy) {
+      case 'price_low': return a.price_jpy - b.price_jpy;
+      case 'price_high': return b.price_jpy - a.price_jpy;
+      case 'newest': return b.id - a.id;
+      default: return 0;
+    }
+  });
+
+  const calculateSavings = (price: number) => {
+    const proxyTotal = price + (price * 0.08) + 500 + 800 + 1000 + 3000;
+    const ourTotal = price + (price * 0.10) + 2500;
+    return Math.round(proxyTotal - ourTotal);
+  };
 
   return (
-    <div className="container-custom py-8">
-      {/* Breadcrumb */}
-      <nav className="breadcrumb mb-6">
-        <Link href="/">Home</Link>
-        <span>/</span>
-        <span className="text-gray-900">All Watches</span>
-      </nav>
-
-      <h1 className="text-3xl md:text-4xl font-display font-bold mb-8">
-        Japanese Watches
-      </h1>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-8 pb-6 border-b">
-        <select
-          className="px-4 py-2 border rounded-lg bg-white"
-          defaultValue={sort}
-          onChange={(e) => {
-            const url = new URL(window.location.href);
-            url.searchParams.set('sort', e.target.value);
-            window.location.href = url.toString();
-          }}
-        >
-          <option value="newest">Newest First</option>
-          <option value="oldest">Oldest First</option>
-          <option value="price_asc">Price: Low to High</option>
-          <option value="price_desc">Price: High to Low</option>
-        </select>
-
-        <select
-          className="px-4 py-2 border rounded-lg bg-white"
-          defaultValue={brand || ''}
-          onChange={(e) => {
-            const url = new URL(window.location.href);
-            if (e.target.value) {
-              url.searchParams.set('brand', e.target.value);
-            } else {
-              url.searchParams.delete('brand');
-            }
-            window.location.href = url.toString();
-          }}
-        >
-          <option value="">All Brands</option>
-          <option value="Seiko">Seiko</option>
-          <option value="Citizen">Citizen</option>
-          <option value="Casio">Casio</option>
-          <option value="Orient">Orient</option>
-        </select>
-
-        <select
-          className="px-4 py-2 border rounded-lg bg-white"
-          defaultValue={condition || ''}
-          onChange={(e) => {
-            const url = new URL(window.location.href);
-            if (e.target.value) {
-              url.searchParams.set('condition', e.target.value);
-            } else {
-              url.searchParams.delete('condition');
-            }
-            window.location.href = url.toString();
-          }}
-        >
-          <option value="">All Conditions</option>
-          <option value="Brand New">Brand New</option>
-          <option value="Like New">Like New</option>
-          <option value="Used">Used</option>
-        </select>
-      </div>
-
-      {/* Results count */}
-      <p className="text-gray-600 mb-6">
-        Showing {products.length} of {pagination.total} watches
-      </p>
-
-      {/* Products Grid */}
-      {products.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No products found.</p>
-          <Link href="/products" className="text-primary hover:underline mt-2 inline-block">
-            View all products
-          </Link>
-        </div>
-      )}
-
-      {/* Pagination */}
-      {pagination.pages > 1 && (
-        <div className="flex justify-center gap-2 mt-12">
-          {page > 1 && (
-            <Link
-              href={`/products?page=${page - 1}&sort=${sort}`}
-              className="px-4 py-2 border rounded-lg hover:bg-gray-50"
-            >
-              Previous
-            </Link>
-          )}
-          
-          {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
-            const pageNum = i + 1;
-            return (
-              <Link
-                key={pageNum}
-                href={`/products?page=${pageNum}&sort=${sort}`}
-                className={`px-4 py-2 border rounded-lg ${
-                  pageNum === page ? 'bg-primary text-white' : 'hover:bg-gray-50'
-                }`}
-              >
-                {pageNum}
-              </Link>
-            );
-          })}
-
-          {page < pagination.pages && (
-            <Link
-              href={`/products?page=${page + 1}&sort=${sort}`}
-              className="px-4 py-2 border rounded-lg hover:bg-gray-50"
-            >
-              Next
-            </Link>
-          )}
-        </div>
-      )}
-
-      {/* SEO Content */}
-      <section className="mt-16 pt-8 border-t">
-        <h2 className="text-2xl font-display font-bold mb-4">
-          Buy Authentic Japanese Watches Online
-        </h2>
-        <div className="prose text-gray-700 max-w-none">
-          <p>
-            Discover our extensive collection of authentic Japanese watches, sourced directly from Japan. 
-            From iconic Seiko timepieces to rugged Casio G-Shocks, elegant Citizen Eco-Drives to classic Orient watches, 
-            we offer the finest selection of Japanese horology at competitive prices.
-          </p>
-          <p>
-            Every watch in our collection is carefully inspected and authenticated before shipping. 
-            We provide detailed photos and descriptions so you know exactly what you're getting. 
-            With worldwide shipping and secure payment options, buying Japanese watches has never been easier.
+    <main>
+      <TrustBar />
+      
+      <section className="bg-[#1A1A1A] text-white py-12">
+        <div className="container mx-auto px-4">
+          <h1 className="text-3xl md:text-4xl font-bold mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
+            Japanese Watches
+          </h1>
+          <p className="text-gray-400">
+            Authentic timepieces at proxy-free prices. All personally inspected and shipped from Japan.
           </p>
         </div>
       </section>
-    </div>
+
+      <div className="bg-[#F5F5F0] min-h-screen py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col lg:flex-row gap-8">
+            <aside className="lg:w-64 flex-shrink-0">
+              <div className="bg-white rounded-xl shadow-lg p-6 sticky top-20">
+                <h3 className="font-bold mb-4">Filters</h3>
+                
+                <div className="mb-6">
+                  <label className="text-sm text-gray-500 block mb-2">Search</label>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search watches..."
+                    className="w-full border rounded-lg px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div className="mb-6">
+                  <label className="text-sm text-gray-500 block mb-2">Brand</label>
+                  <select 
+                    value={selectedBrand}
+                    onChange={(e) => setSelectedBrand(e.target.value)}
+                    className="w-full border rounded-lg px-3 py-2 text-sm"
+                  >
+                    <option value="">All Brands</option>
+                    {brands.map(brand => (
+                      <option key={brand} value={brand}>{brand}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-6">
+                  <label className="text-sm text-gray-500 block mb-2">Condition</label>
+                  <select 
+                    value={selectedCondition}
+                    onChange={(e) => setSelectedCondition(e.target.value)}
+                    className="w-full border rounded-lg px-3 py-2 text-sm"
+                  >
+                    <option value="">All Conditions</option>
+                    {conditions.map(cond => (
+                      <option key={cond} value={cond}>{cond}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-6">
+                  <label className="text-sm text-gray-500 block mb-2">Sort By</label>
+                  <select 
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full border rounded-lg px-3 py-2 text-sm"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="price_low">Price: Low to High</option>
+                    <option value="price_high">Price: High to Low</option>
+                  </select>
+                </div>
+
+                <button 
+                  onClick={() => {
+                    setSelectedBrand('');
+                    setSelectedCondition('');
+                    setSearchQuery('');
+                    setSortBy('newest');
+                  }}
+                  className="w-full text-sm text-[#B50012] hover:underline"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            </aside>
+
+            <div className="flex-1">
+              <div className="flex justify-between items-center mb-6">
+                <p className="text-gray-600">
+                  {filteredProducts.length} {filteredProducts.length === 1 ? 'watch' : 'watches'} found
+                </p>
+              </div>
+
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="inline-block w-8 h-8 border-4 border-gray-300 border-t-[#B50012] rounded-full animate-spin"></div>
+                  <p className="text-gray-500 mt-4">Loading watches...</p>
+                </div>
+              ) : filteredProducts.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-xl shadow">
+                  <p className="text-gray-500 mb-4">No watches found matching your criteria.</p>
+                  <button 
+                    onClick={() => {
+                      setSelectedBrand('');
+                      setSelectedCondition('');
+                      setSearchQuery('');
+                    }}
+                    className="text-[#B50012] hover:underline"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {filteredProducts.map((product) => (
+                    <Link 
+                      key={product.id}
+                      href={`/products/${product.slug || product.id}`}
+                      className="group bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1"
+                    >
+                      <div className="relative aspect-square bg-gray-100 overflow-hidden">
+                        {product.image_1 ? (
+                          <img
+                            src={product.image_1}
+                            alt={product.title_en || product.title_jp}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <span className="text-5xl">⌚</span>
+                          </div>
+                        )}
+                        
+                        <div className="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
+                          Save ¥{calculateSavings(product.price_jpy).toLocaleString()}
+                        </div>
+
+                        <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                          {product.condition}
+                        </div>
+                      </div>
+
+                      <div className="p-4">
+                        <div className="text-sm text-[#B50012] font-medium mb-1">
+                          {product.brand}
+                        </div>
+                        <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 min-h-[3rem]">
+                          {product.title_en || product.title_jp || `${product.brand} ${product.model}`}
+                        </h3>
+                        <div className="flex items-end justify-between">
+                          <div>
+                            <div className="text-2xl font-bold text-[#1A1A1A]">
+                              ¥{product.price_jpy.toLocaleString()}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              ~${Math.round(product.price_jpy / 150)} USD
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-400 text-right">
+                            <span className="line-through">Proxy: ~¥{Math.round(product.price_jpy * 1.25).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }
