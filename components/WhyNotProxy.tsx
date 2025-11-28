@@ -33,7 +33,7 @@ export default function WhyNotProxy() {
             Why Skip the Proxy?
           </h2>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            Proxy services like Buyee and ZenMarket add 20-40% to your final price. Here's how we're different.
+            Proxy services add 20-40% to your final price. Here's how we're different.
           </p>
         </div>
 

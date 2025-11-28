@@ -19,7 +19,7 @@ export default function SavingsCalculator() {
   const [country, setCountry] = useState('USA');
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Proxy fees (Buyee average)
+  // Proxy fees (typical proxy service)
   const proxyServiceFee = Math.round(price * 0.08); // 8%
   const proxyPaymentFee = 500;
   const proxyPackingFee = 800;
@@ -103,7 +103,7 @@ export default function SavingsCalculator() {
                   MORE EXPENSIVE
                 </div>
                 <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <span className="text-red-500">❌</span> Via Proxy (Buyee)
+                  <span className="text-red-500">❌</span> Via Proxy Service
                 </h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">

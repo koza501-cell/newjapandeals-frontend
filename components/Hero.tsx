@@ -10,7 +10,7 @@ const headlines = [
   },
   {
     title: "Why Pay 40% Extra to a Middleman?",
-    subtitle: "Skip Buyee, ZenMarket, and other proxies"
+    subtitle: "Skip the proxy services and hidden fees"
   },
   {
     title: "Direct from Japan. No Proxy. No Surprises.",
