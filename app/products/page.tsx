@@ -43,8 +43,8 @@ export default function ProductsPage() {
     fetchData();
   }, []);
 
-  const brands = [...new Set(products.map(p => p.brand).filter(Boolean))];
-  const conditions = [...new Set(products.map(p => p.condition).filter(Boolean))];
+  const brands = Array.from(new Set(products.map(p => p.brand).filter(Boolean)));
+const conditions = Array.from(new Set(products.map(p => p.condition).filter(Boolean)));
 
   let filteredProducts = products.filter(p => {
     if (selectedBrand && p.brand !== selectedBrand) return false;
