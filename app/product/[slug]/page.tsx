@@ -97,7 +97,7 @@ export default function ProductPage() {
   const images = [product.image_1, product.image_2, product.image_3, product.image_4, product.image_5].filter(Boolean);
 
   // Price calculations - convert string to number
-  const basePrice = parseFloat(product.price_jpy) || 0;
+  const basePrice = parseFloat(String(product.price_jpy)) || 0;
   const handlingFee = Math.round(basePrice * 0.10);
   const shippingFee = shippingRates[country]?.[shippingMethod]?.price || 2500;
   const totalPrice = basePrice + handlingFee + shippingFee;
