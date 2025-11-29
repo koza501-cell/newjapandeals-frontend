@@ -34,6 +34,7 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Customer Service</h4>
             <ul className="space-y-2 text-gray-400">
+              <li><Link href="/why-us" className="hover:text-gold transition-colors">Why Buy From Us</Link></li>
               <li><Link href="/contact" className="hover:text-gold transition-colors">Contact Us</Link></li>
               <li><Link href="/track-order" className="hover:text-gold transition-colors">Track Your Order</Link></li>
               <li><Link href="/shipping-policy" className="hover:text-gold transition-colors">Shipping Information</Link></li>

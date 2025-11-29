@@ -67,6 +67,9 @@ export default function Header() {
                 ))}
               </div>
             </div>
+            <Link href="/why-us" className="font-medium hover:text-primary transition-colors">
+              Why Us
+            </Link>
             <Link href="/about" className="font-medium hover:text-primary transition-colors">
               About
             </Link>
@@ -153,6 +156,9 @@ export default function Header() {
                 ))}
               </div>
             </div>
+            <Link href="/why-us" className="block font-medium py-2 hover:text-primary">
+              Why Us
+            </Link>
             <Link href="/about" className="block font-medium py-2 hover:text-primary">
               About
             </Link>
