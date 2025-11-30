@@ -83,7 +83,7 @@ export default function FAQPage() {
       faqs: [
         {
           question: 'How long does shipping take?',
-          answer: 'Shipping times vary by method: EMS (3-7 business days), Airmail (7-14 days), Surface Mail (1-2 months). We ship within 48 hours of payment on business days.'
+          answer: 'Shipping times vary by method: EMS (7-12 business days), ePacket (10-18 days), Airmail/Small Packet (12-20 days), Surface Mail (1.5-3 months). We ship within 48 hours of payment on business days. These are estimated delivery times - actual delivery depends on destination country and customs processing.'
         },
         {
           question: 'Do you ship worldwide?',
