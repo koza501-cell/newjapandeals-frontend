@@ -6,24 +6,51 @@ export default function ShippingPolicyPage() {
   const shippingMethods = [
     {
       name: 'EMS (Express Mail Service)',
-      speed: '3-7 business days',
+      speed: '7-12 business days',
       tracking: 'Full tracking',
-      insurance: 'Available',
-      best: 'Fastest option with full tracking'
+      insurance: 'Included',
+      best: 'Fastest & most reliable option',
+      price: 'Premium'
     },
     {
-      name: 'Airmail',
-      speed: '7-14 business days',
+      name: 'ePacket',
+      speed: '10-18 business days',
+      tracking: 'Full tracking',
+      insurance: 'Limited',
+      best: 'Budget option with tracking (under 2kg)',
+      price: 'Economy'
+    },
+    {
+      name: 'Airmail Parcel',
+      speed: '12-20 business days',
       tracking: 'Limited tracking',
       insurance: 'Available',
-      best: 'Balance of speed and cost'
+      best: 'Standard international shipping',
+      price: 'Moderate'
     },
     {
-      name: 'Surface Mail (SAL/Sea)',
-      speed: '1-2 months',
+      name: 'Small Packet (Air)',
+      speed: '12-20 business days',
+      tracking: 'Optional (add registered)',
+      insurance: 'Optional',
+      best: 'Cheapest air option for items under 2kg',
+      price: 'Budget'
+    },
+    {
+      name: 'Registered Airmail',
+      speed: '12-20 business days',
+      tracking: 'Full tracking',
+      insurance: 'Up to ¥6,000',
+      best: 'Affordable with tracking & insurance',
+      price: 'Budget+'
+    },
+    {
+      name: 'Surface Mail (Sea)',
+      speed: '1.5-3 months',
       tracking: 'Basic tracking',
       insurance: 'Available',
-      best: 'Most economical option'
+      best: 'Most economical for heavy items',
+      price: 'Lowest'
     }
   ];
 
@@ -72,9 +99,14 @@ export default function ShippingPolicyPage() {
             <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: 'Playfair Display, serif' }}>
               Shipping Methods
             </h2>
-            <p className="text-gray-700 mb-6">
+            <p className="text-gray-700 mb-4">
               We offer multiple shipping options to accommodate different budgets and timeframes. The best option depends on your location, the size and weight of your order, and how quickly you need delivery.
             </p>
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+              <p className="text-gray-700 m-0">
+                <strong>💡 Shipping Calculator:</strong> Exact shipping costs are calculated based on product weight and your destination. You'll see the final shipping cost at checkout before payment.
+              </p>
+            </div>
 
             <div className="space-y-4 mb-12">
               {shippingMethods.map((method, index) => (
@@ -84,7 +116,7 @@ export default function ShippingPolicyPage() {
                       <h3 className="font-bold text-lg">{method.name}</h3>
                       <p className="text-gray-500 text-sm">{method.best}</p>
                     </div>
-                    <div className="flex flex-wrap gap-4 text-sm">
+                    <div className="flex flex-wrap gap-2 text-sm">
                       <div className="bg-gray-100 px-3 py-1 rounded">
                         <span className="text-gray-500">Speed:</span> <strong>{method.speed}</strong>
                       </div>
@@ -93,6 +125,14 @@ export default function ShippingPolicyPage() {
                       </div>
                       <div className="bg-gray-100 px-3 py-1 rounded">
                         <span className="text-gray-500">Insurance:</span> <strong>{method.insurance}</strong>
+                      </div>
+                      <div className={`px-3 py-1 rounded ${
+                        method.price === 'Premium' ? 'bg-purple-100 text-purple-700' :
+                        method.price === 'Lowest' ? 'bg-green-100 text-green-700' :
+                        method.price === 'Budget' || method.price === 'Budget+' ? 'bg-blue-100 text-blue-700' :
+                        'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        <strong>{method.price}</strong>
                       </div>
                     </div>
                   </div>
