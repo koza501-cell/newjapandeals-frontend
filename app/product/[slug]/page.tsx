@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import TrustBar from '@/components/TrustBar';
+import ShippingCalculator from '@/components/ShippingCalculator';
 
 interface Product {
   id: number;
@@ -31,26 +32,31 @@ interface Product {
   image_4: string;
   image_5: string;
   status: string;
+  shipping_category_id: number | null;
 }
 
-const shippingRates: Record<string, Record<string, { price: number; days: string }>> = {
-  'USA': { 'EMS': { price: 2500, days: '3-5' }, 'Airmail': { price: 1800, days: '7-14' }, 'Surface': { price: 1200, days: '30-60' } },
-  'UK': { 'EMS': { price: 2800, days: '3-7' }, 'Airmail': { price: 2000, days: '7-14' }, 'Surface': { price: 1400, days: '30-60' } },
-  'Germany': { 'EMS': { price: 2800, days: '3-7' }, 'Airmail': { price: 2000, days: '7-14' }, 'Surface': { price: 1400, days: '30-60' } },
-  'France': { 'EMS': { price: 2800, days: '3-7' }, 'Airmail': { price: 2000, days: '7-14' }, 'Surface': { price: 1400, days: '30-60' } },
-  'Australia': { 'EMS': { price: 2200, days: '3-5' }, 'Airmail': { price: 1600, days: '7-14' }, 'Surface': { price: 1100, days: '30-60' } },
-  'Canada': { 'EMS': { price: 2600, days: '4-7' }, 'Airmail': { price: 1900, days: '7-14' }, 'Surface': { price: 1300, days: '30-60' } },
-  'Singapore': { 'EMS': { price: 2000, days: '2-4' }, 'Airmail': { price: 1500, days: '5-10' }, 'Surface': { price: 1000, days: '30-60' } },
-  'Other': { 'EMS': { price: 3000, days: '5-10' }, 'Airmail': { price: 2200, days: '10-21' }, 'Surface': { price: 1500, days: '45-90' } },
-};
+interface ShippingRate {
+  method_id: number;
+  method_code: string;
+  method_name: string;
+  method_name_ja: string;
+  weight_tier_grams: number;
+  base_price_jpy: number;
+  extra_charge_jpy: number;
+  total_price_jpy: number;
+  estimated_days_min: number;
+  estimated_days_max: number;
+  has_tracking: boolean;
+  has_insurance: boolean;
+  insurance_max_jpy: number;
+}
 
 export default function ProductPage() {
   const params = useParams();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [country, setCountry] = useState('USA');
-  const [shippingMethod, setShippingMethod] = useState('EMS');
+  const [selectedShipping, setSelectedShipping] = useState<ShippingRate | null>(null);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -96,22 +102,28 @@ export default function ProductPage() {
   // Get all images
   const images = [product.image_1, product.image_2, product.image_3, product.image_4, product.image_5].filter(Boolean);
 
-  // Price calculations - convert string to number
+  // Price calculations
   const basePrice = parseFloat(String(product.price_jpy)) || 0;
   const handlingFee = Math.round(basePrice * 0.10);
-  const shippingFee = shippingRates[country]?.[shippingMethod]?.price || 2500;
+  const shippingFee = selectedShipping?.total_price_jpy || 0;
   const totalPrice = basePrice + handlingFee + shippingFee;
-  const deliveryDays = shippingRates[country]?.[shippingMethod]?.days || '5-10';
+  const deliveryDays = selectedShipping 
+    ? `${selectedShipping.estimated_days_min}-${selectedShipping.estimated_days_max}` 
+    : '--';
 
-  // Proxy comparison
+  // Proxy comparison (estimate with EMS-like pricing)
+  const estimatedProxyShipping = shippingFee > 0 ? shippingFee + 500 : 3000;
   const proxyServiceFee = Math.round(basePrice * 0.08);
   const proxyPaymentFee = 500;
   const proxyPackingFee = 800;
   const proxyConsolidation = 1000;
-  const proxyShipping = shippingFee + 500;
-  const proxyTotal = basePrice + proxyServiceFee + proxyPaymentFee + proxyPackingFee + proxyConsolidation + proxyShipping;
+  const proxyTotal = basePrice + proxyServiceFee + proxyPaymentFee + proxyPackingFee + proxyConsolidation + estimatedProxyShipping;
   const savings = proxyTotal - totalPrice;
-  const savingsPercent = Math.round((savings / proxyTotal) * 100);
+  const savingsPercent = proxyTotal > 0 ? Math.round((savings / proxyTotal) * 100) : 0;
+
+  const handleShippingSelect = (method: ShippingRate) => {
+    setSelectedShipping(method);
+  };
 
   return (
     <main>
@@ -185,60 +197,39 @@ export default function ProductPage() {
               </div>
 
               {/* Proxy-Free Pricing Badge */}
-              <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                <div className="flex items-center gap-2 text-green-700 font-bold mb-2">
-                  <span>🎯</span> PROXY-FREE PRICING
+              {selectedShipping && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-green-700 font-bold mb-2">
+                    <span>🎯</span> PROXY-FREE PRICING
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <div className="text-gray-500">Via Proxy</div>
+                      <div className="text-red-500 line-through font-medium">~¥{proxyTotal.toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500">Via Us</div>
+                      <div className="text-green-600 font-bold">¥{totalPrice.toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500">You Save</div>
+                      <div className="text-green-600 font-bold">¥{savings.toLocaleString()} ({savingsPercent}%)</div>
+                    </div>
+                  </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <div className="text-gray-500">Via Proxy</div>
-                    <div className="text-red-500 line-through font-medium">~¥{proxyTotal.toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500">Via Us</div>
-                    <div className="text-green-600 font-bold">¥{totalPrice.toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500">You Save</div>
-                    <div className="text-green-600 font-bold">¥{savings.toLocaleString()} ({savingsPercent}%)</div>
-                  </div>
-                </div>
-              </div>
+              )}
+
+              {/* Shipping Calculator */}
+              <ShippingCalculator 
+                productId={product.id}
+                onSelectMethod={handleShippingSelect}
+                showTitle={true}
+              />
 
               {/* Price Breakdown */}
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h3 className="font-bold text-lg mb-4">Price Breakdown</h3>
                 
-                {/* Country & Shipping Selection */}
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="text-sm text-gray-500 block mb-1">Ship to</label>
-                    <select 
-                      value={country} 
-                      onChange={(e) => setCountry(e.target.value)}
-                      className="w-full border rounded-lg px-3 py-2"
-                    >
-                      {Object.keys(shippingRates).map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-sm text-gray-500 block mb-1">Shipping</label>
-                    <select 
-                      value={shippingMethod} 
-                      onChange={(e) => setShippingMethod(e.target.value)}
-                      className="w-full border rounded-lg px-3 py-2"
-                    >
-                      {Object.keys(shippingRates[country] || {}).map(method => (
-                        <option key={method} value={method}>
-                          {method} ({shippingRates[country][method].days} days)
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Item Price</span>
@@ -249,32 +240,63 @@ export default function ProductPage() {
                     <span>¥{handlingFee.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Shipping ({shippingMethod})</span>
-                    <span>¥{shippingFee.toLocaleString()}</span>
+                    <span className="text-gray-600">
+                      Shipping {selectedShipping ? `(${selectedShipping.method_name})` : ''}
+                    </span>
+                    <span>
+                      {selectedShipping ? `¥${shippingFee.toLocaleString()}` : 'Select above'}
+                    </span>
                   </div>
                   <hr className="my-3" />
                   <div className="flex justify-between text-xl font-bold">
                     <span>Total</span>
-                    <span className="text-[#B50012]">¥{totalPrice.toLocaleString()}</span>
+                    <span className="text-[#B50012]">
+                      {selectedShipping ? `¥${totalPrice.toLocaleString()}` : 'Select shipping'}
+                    </span>
                   </div>
-                  <div className="text-right text-gray-500 text-sm">
-                    ~${Math.round(totalPrice / 150).toLocaleString()} USD
-                  </div>
+                  {selectedShipping && (
+                    <div className="text-right text-gray-500 text-sm">
+                      ~${Math.round(totalPrice / 150).toLocaleString()} USD
+                    </div>
+                  )}
                 </div>
 
-                <div className="mt-4 text-sm text-gray-500 flex items-center gap-2">
-                  <span>📦</span> Estimated delivery: {deliveryDays} business days
-                </div>
+                {selectedShipping && (
+                  <div className="mt-4 text-sm text-gray-500 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span>📦</span> Estimated delivery: {deliveryDays} business days
+                    </div>
+                    {selectedShipping.has_tracking && (
+                      <div className="flex items-center gap-2">
+                        <span>📍</span> Includes tracking number
+                      </div>
+                    )}
+                    {selectedShipping.has_insurance && (
+                      <div className="flex items-center gap-2">
+                        <span>🛡️</span> Insured up to ¥{selectedShipping.insurance_max_jpy.toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Dual Purchase Buttons */}
               <div className="space-y-3">
                 {/* International Checkout - Primary */}
-                <button className="w-full bg-[#B50012] hover:bg-[#9A0010] text-white py-4 rounded-xl font-bold text-lg transition-all hover:scale-[1.02] shadow-lg flex items-center justify-center gap-3">
+                <button 
+                  disabled={!selectedShipping}
+                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-3 ${
+                    selectedShipping 
+                      ? 'bg-[#B50012] hover:bg-[#9A0010] text-white hover:scale-[1.02]' 
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
                   <span className="text-2xl">🌍</span>
                   <div className="text-left">
                     <div>International Checkout</div>
-                    <div className="text-sm font-normal opacity-80">Ships worldwide from Japan</div>
+                    <div className="text-sm font-normal opacity-80">
+                      {selectedShipping ? 'Ships worldwide from Japan' : 'Select shipping method above'}
+                    </div>
                   </div>
                 </button>
 
