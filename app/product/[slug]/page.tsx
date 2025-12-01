@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import TrustBar from '@/components/TrustBar';
 import ShippingCalculator from '@/components/ShippingCalculator';
+import { useCart } from '@/context/CartContext';
 
 interface Product {
   id: number;
@@ -53,10 +54,17 @@ interface ShippingRate {
 
 export default function ProductPage() {
   const params = useParams();
+  const router = useRouter();
+  const { addToCart, items } = useCart();
+  
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedShipping, setSelectedShipping] = useState<ShippingRate | null>(null);
+  const [addedToCart, setAddedToCart] = useState(false);
+
+  // Check if product is already in cart
+  const isInCart = product ? items.some(item => item.id === product.id) : false;
 
   useEffect(() => {
     async function fetchProduct() {
@@ -76,6 +84,14 @@ export default function ProductPage() {
       fetchProduct();
     }
   }, [params.slug]);
+
+  // Reset addedToCart message after 3 seconds
+  useEffect(() => {
+    if (addedToCart) {
+      const timer = setTimeout(() => setAddedToCart(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [addedToCart]);
 
   if (loading) {
     return (
@@ -123,6 +139,46 @@ export default function ProductPage() {
 
   const handleShippingSelect = (method: ShippingRate) => {
     setSelectedShipping(method);
+  };
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    
+    addToCart({
+      id: product.id,
+      slug: product.slug,
+      title: product.title_en || `${product.brand} ${product.model}`,
+      brand: product.brand,
+      model: product.model,
+      price_jpy: basePrice,
+      image: product.image_1,
+      condition: product.condition,
+      shipping_category_id: product.shipping_category_id,
+    });
+    
+    setAddedToCart(true);
+  };
+
+  const handleBuyNow = () => {
+    if (!product) return;
+    
+    // Add to cart first if not already in cart
+    if (!isInCart) {
+      addToCart({
+        id: product.id,
+        slug: product.slug,
+        title: product.title_en || `${product.brand} ${product.model}`,
+        brand: product.brand,
+        model: product.model,
+        price_jpy: basePrice,
+        image: product.image_1,
+        condition: product.condition,
+        shipping_category_id: product.shipping_category_id,
+      });
+    }
+    
+    // Navigate to cart
+    router.push('/cart');
   };
 
   return (
@@ -280,23 +336,54 @@ export default function ProductPage() {
                 )}
               </div>
 
-              {/* Dual Purchase Buttons */}
+              {/* Added to Cart Success Message */}
+              {addedToCart && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-green-700">
+                    <span>✓</span> Added to cart!
+                  </div>
+                  <Link href="/cart" className="text-green-700 font-medium hover:underline">
+                    View Cart →
+                  </Link>
+                </div>
+              )}
+
+              {/* Purchase Buttons */}
               <div className="space-y-3">
-                {/* International Checkout - Primary */}
+                {/* Add to Cart Button */}
+                {isInCart ? (
+                  <Link
+                    href="/cart"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-3"
+                  >
+                    <span className="text-2xl">✓</span>
+                    <div className="text-left">
+                      <div>In Your Cart</div>
+                      <div className="text-sm font-normal opacity-80">Click to view cart</div>
+                    </div>
+                  </Link>
+                ) : (
+                  <button
+                    onClick={handleAddToCart}
+                    className="w-full bg-[#1A1A1A] hover:bg-[#333] text-white py-4 rounded-xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-3 hover:scale-[1.02]"
+                  >
+                    <span className="text-2xl">🛒</span>
+                    <div className="text-left">
+                      <div>Add to Cart</div>
+                      <div className="text-sm font-normal opacity-80">Continue shopping</div>
+                    </div>
+                  </button>
+                )}
+
+                {/* Buy Now - International Checkout */}
                 <button 
-                  disabled={!selectedShipping}
-                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg flex items-center justify-center gap-3 ${
-                    selectedShipping 
-                      ? 'bg-[#B50012] hover:bg-[#9A0010] text-white hover:scale-[1.02]' 
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
+                  onClick={handleBuyNow}
+                  className="w-full bg-[#B50012] hover:bg-[#9A0010] text-white py-4 rounded-xl font-bold text-lg transition-all hover:scale-[1.02] shadow-lg flex items-center justify-center gap-3"
                 >
                   <span className="text-2xl">🌍</span>
                   <div className="text-left">
-                    <div>International Checkout</div>
-                    <div className="text-sm font-normal opacity-80">
-                      {selectedShipping ? 'Ships worldwide from Japan' : 'Select shipping method above'}
-                    </div>
+                    <div>Buy Now</div>
+                    <div className="text-sm font-normal opacity-80">Ships worldwide from Japan</div>
                   </div>
                 </button>
 
