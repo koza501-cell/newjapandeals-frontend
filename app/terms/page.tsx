@@ -205,21 +205,71 @@ export default function TermsPage() {
 
             {/* Section 11 - Insurance */}
             <section>
-              <h2 className="text-xl font-bold text-[#1A1A1A] mb-4">11. Optional Insurance Coverage</h2>
+              <h2 className="text-xl font-bold text-[#1A1A1A] mb-4">11. Shipping Insurance</h2>
               <div className="text-gray-600 space-y-3">
-                <p>New Japan Deals offers optional insurance through Japan Post for eligible shipping methods (EMS, International Parcel Air, International Parcel Surface).</p>
+                <p>Insurance is <strong>OPTIONAL</strong> and available for eligible shipping methods (EMS, International Parcel Air, International Parcel Surface).</p>
                 
-                <h3 className="font-bold mt-4">Insurance Pricing:</h3>
+                <h3 className="font-bold mt-4">Insurance Cost (Paid by Buyer):</h3>
                 <ul className="list-disc pl-6 space-y-2">
-                  <li>Insurance fee = <strong>2x Japan Post insurance cost</strong></li>
-                  <li>This covers Japan Post's insurance premium plus our administrative handling fee for claim processing.</li>
+                  <li><strong>EMS:</strong> First ¥20,000 coverage is FREE</li>
+                  <li>Additional coverage: ¥50 per ¥20,000 (Japan Post rate)</li>
+                  <li>Maximum coverage: ¥2,000,000</li>
                 </ul>
 
-                <h3 className="font-bold mt-4">Coverage Limits (Japan Post):</h3>
+                <h3 className="font-bold mt-4">If You Skip Insurance:</h3>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-red-700">
+                    <strong>No claim is possible.</strong> You accept full risk for lost or damaged packages. 
+                    New Japan Deals cannot provide any refund without insurance.
+                  </p>
+                </div>
+
+                <h3 className="font-bold mt-4">If You Add Insurance:</h3>
                 <ul className="list-disc pl-6 space-y-2">
-                  <li><strong>EMS:</strong> Up to ¥2,000,000 (free coverage for first ¥20,000, then ¥50 per additional ¥20,000)</li>
-                  <li><strong>International Parcel:</strong> Up to ¥11,160 standard</li>
+                  <li>Your package is covered against loss and visible transit damage.</li>
+                  <li>We will file the insurance claim with Japan Post on your behalf.</li>
                 </ul>
+
+                <h3 className="font-bold mt-4">Claim Processing Fee (25%):</h3>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <p className="text-yellow-800">
+                    If an insurance claim is successful, New Japan Deals will retain <strong>25% of the claim payout</strong> as a processing fee.
+                    You will receive <strong>75% of the approved claim amount</strong>.
+                  </p>
+                  <p className="text-yellow-700 mt-2 text-sm">
+                    This fee covers: claim filing, communication with Japan Post (in Japanese), document preparation, 
+                    multiple meetings/contacts, and processing time (30-90 days).
+                  </p>
+                </div>
+
+                <h3 className="font-bold mt-4">Example Claim Payouts:</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="border p-2 text-left">Claim Amount</th>
+                        <th className="border p-2 text-left">NJD Fee (25%)</th>
+                        <th className="border p-2 text-left">You Receive (75%)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td className="border p-2">¥20,000</td><td className="border p-2">¥5,000</td><td className="border p-2">¥15,000</td></tr>
+                      <tr><td className="border p-2">¥50,000</td><td className="border p-2">¥12,500</td><td className="border p-2">¥37,500</td></tr>
+                      <tr><td className="border p-2">¥100,000</td><td className="border p-2">¥25,000</td><td className="border p-2">¥75,000</td></tr>
+                      <tr><td className="border p-2">¥500,000</td><td className="border p-2">¥125,000</td><td className="border p-2">¥375,000</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <h3 className="font-bold mt-4">Want to Keep 100%?</h3>
+                <p>You may file the insurance claim directly with Japan Post yourself. This requires:</p>
+                <ul className="list-disc pl-6 space-y-2">
+                  <li>Japanese language proficiency</li>
+                  <li>Direct communication with Japan Post</li>
+                  <li>Completing claim documentation</li>
+                  <li>Handling all correspondence yourself</li>
+                </ul>
+                <p className="text-sm text-gray-500 mt-2">If you choose to self-file, New Japan Deals will not be involved in the claim process.</p>
 
                 <h3 className="font-bold mt-4">What IS Covered:</h3>
                 <ul className="list-disc pl-6 space-y-2">
@@ -247,12 +297,16 @@ export default function TermsPage() {
                   <li>Keep all original packaging materials until claim is resolved.</li>
                   <li>We will file the insurance claim with Japan Post on your behalf.</li>
                   <li>Japan Post investigation takes <strong>30-90 days</strong>.</li>
-                  <li>Refund is issued <strong>ONLY after Japan Post approves the claim</strong>.</li>
-                  <li>Refund amount = Japan Post compensation amount (we retain our processing fee from the insurance premium paid).</li>
+                  <li>Payout is issued <strong>ONLY after Japan Post approves the claim</strong>.</li>
+                  <li>You receive 75% of approved amount (25% retained as processing fee).</li>
                 </ol>
 
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-                  <p className="text-yellow-800"><strong>Important:</strong> Insurance claims are processed and approved solely by Japan Post. New Japan Deals acts as an intermediary and cannot guarantee claim approval. Final decisions rest with Japan Post.</p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
+                  <p className="text-gray-700 text-sm">
+                    <strong>Note:</strong> Insurance claims are processed and approved solely by Japan Post. 
+                    New Japan Deals acts as an intermediary and cannot guarantee claim approval. 
+                    Final decisions rest with Japan Post.
+                  </p>
                 </div>
               </div>
             </section>
