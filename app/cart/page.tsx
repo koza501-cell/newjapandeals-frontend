@@ -350,16 +350,21 @@ export default function CartPage() {
                 </div>
 
                 {/* Checkout Button */}
-                <button
-                  disabled={!selectedShipping}
-                  className={`w-full mt-6 py-4 rounded-xl font-bold text-lg transition-all ${
-                    selectedShipping
-                      ? 'bg-[#B50012] hover:bg-[#9A0010] text-white hover:scale-[1.02] shadow-lg'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
-                >
-                  {selectedShipping ? 'Proceed to Checkout' : 'Select Shipping to Continue'}
-                </button>
+                {selectedShipping ? (
+                  <Link
+                    href="/checkout"
+                    className="w-full mt-6 py-4 rounded-xl font-bold text-lg transition-all bg-[#B50012] hover:bg-[#9A0010] text-white hover:scale-[1.02] shadow-lg block text-center"
+                  >
+                    Proceed to Checkout
+                  </Link>
+                ) : (
+                  <button
+                    disabled
+                    className="w-full mt-6 py-4 rounded-xl font-bold text-lg bg-gray-300 text-gray-500 cursor-not-allowed"
+                  >
+                    Select Shipping to Continue
+                  </button>
+                )}
 
                 {/* Trust Points */}
                 <div className="mt-4 pt-4 border-t space-y-2 text-xs text-gray-500">
