@@ -127,8 +127,23 @@ export default function ReturnsPage() {
                   </li>
                   <li>We file the claim with Japan Post on your behalf</li>
                   <li>Japan Post investigates (takes <strong>30-90 days</strong>)</li>
-                  <li>Refund issued <strong>ONLY after</strong> Japan Post approves claim</li>
+                  <li>Payout issued <strong>ONLY after</strong> Japan Post approves claim</li>
                 </ol>
+
+                <h3 className="font-bold mt-4 text-yellow-800">25% Processing Fee:</h3>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-2">
+                  <p className="text-yellow-800 text-sm">
+                    If claim is successful, we retain <strong>25%</strong> as processing fee. You receive <strong>75%</strong> of the claim amount.
+                  </p>
+                  <div className="mt-2 text-xs text-yellow-700">
+                    <p>Example: ¥100,000 claim → You receive ¥75,000</p>
+                  </div>
+                </div>
+
+                <h3 className="font-bold mt-4 text-green-800">Want to Keep 100%?</h3>
+                <p className="text-green-700 text-sm">
+                  You may file the claim directly with Japan Post yourself (requires Japanese language, documentation, and handling all correspondence).
+                </p>
 
                 <h3 className="font-bold mt-4 text-green-800">What's Covered:</h3>
                 <ul className="list-disc pl-6 space-y-1 text-green-700">
