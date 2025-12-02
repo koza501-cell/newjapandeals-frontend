@@ -7,6 +7,8 @@ import TrustBar from '@/components/TrustBar';
 import ShippingCalculator from '@/components/ShippingCalculator';
 import { useCart } from '@/context/CartContext';
 
+const API_URL = 'https://api.newjapandeals.com';
+
 interface Product {
   id: number;
   sku: string;
@@ -151,7 +153,7 @@ export default function ProductPage() {
       brand: product.brand,
       model: product.model,
       price_jpy: basePrice,
-      image: product.image_1,
+      image: `${API_URL}${product.image_1}`,
       condition: product.condition,
       shipping_category_id: product.shipping_category_id,
     });
@@ -171,7 +173,7 @@ export default function ProductPage() {
         brand: product.brand,
         model: product.model,
         price_jpy: basePrice,
-        image: product.image_1,
+        image: `${API_URL}${product.image_1}`,
         condition: product.condition,
         shipping_category_id: product.shipping_category_id,
       });
@@ -204,7 +206,7 @@ export default function ProductPage() {
                 <div className="aspect-square relative">
                   {images[selectedImage] ? (
                     <img
-                      src={images[selectedImage]}
+                      src={`${API_URL}${images[selectedImage]}`}
                       alt={product.title_en}
                       className="w-full h-full object-contain"
                     />
@@ -231,7 +233,7 @@ export default function ProductPage() {
                         selectedImage === index ? 'border-[#B50012]' : 'border-transparent'
                       }`}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <img src={`${API_URL}${img}`} alt="" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
