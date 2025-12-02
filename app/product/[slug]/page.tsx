@@ -71,7 +71,9 @@ export default function ProductPage() {
   useEffect(() => {
     async function fetchProduct() {
       try {
-        const res = await fetch(`https://api.newjapandeals.com/api/products.php?slug=${params.slug}`);
+        const res = await fetch(`https://api.newjapandeals.com/api/products.php?slug=${params.slug}`, {
+  cache: 'no-store'
+});
         const data = await res.json();
         if (data.success && data.product) {
           setProduct(data.product);
