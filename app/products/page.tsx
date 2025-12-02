@@ -31,7 +31,9 @@ export default function ProductsPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const productsRes = await fetch(`${API_URL}/api/products.php?status=published`);
+        const productsRes = await fetch(`${API_URL}/api/products.php?status=published`, {
+  cache: 'no-store'
+});
         const productsData = await productsRes.json();
         if (productsData.success) {
           setProducts(productsData.products || []);
