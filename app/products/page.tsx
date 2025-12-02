@@ -5,7 +5,6 @@ import Link from 'next/link';
 import TrustBar from '@/components/TrustBar';
 
 const API_URL = 'https://api.newjapandeals.com';
-src={`${API_URL}${product.image_1}`}
 
 interface Product {
   id: number;
@@ -32,7 +31,7 @@ export default function ProductsPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const productsRes = await fetch('https://api.newjapandeals.com/api/products.php?status=published');
+        const productsRes = await fetch(`${API_URL}/api/products.php?status=published`);
         const productsData = await productsRes.json();
         if (productsData.success) {
           setProducts(productsData.products || []);
@@ -46,8 +45,8 @@ export default function ProductsPage() {
     fetchData();
   }, []);
 
- const brands = Array.from(new Set(products.map(p => p.brand).filter(Boolean)));
-const conditions = Array.from(new Set(products.map(p => p.condition).filter(Boolean)));
+  const brands = Array.from(new Set(products.map(p => p.brand).filter(Boolean)));
+  const conditions = Array.from(new Set(products.map(p => p.condition).filter(Boolean)));
 
   let filteredProducts = products.filter(p => {
     if (selectedBrand && p.brand !== selectedBrand) return false;
@@ -210,7 +209,7 @@ const conditions = Array.from(new Set(products.map(p => p.condition).filter(Bool
                       <div className="relative aspect-square bg-gray-100 overflow-hidden">
                         {product.image_1 ? (
                           <img
-                            src={`https://api.newjapandeals.com${product.image_1}`}
+                            src={`${API_URL}${product.image_1}`}
                             alt={product.title_en || product.title_jp}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
