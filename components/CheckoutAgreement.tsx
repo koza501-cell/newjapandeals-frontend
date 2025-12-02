@@ -110,8 +110,9 @@ export default function CheckoutAgreement({ hasInsurance, onAgreementChange }: C
           />
           <span className="text-sm text-gray-700 group-hover:text-gray-900">
             <strong>Insurance Agreement:</strong> I understand that insurance claims are processed by Japan Post and may take 30-90 days. 
-            Refunds are provided ONLY after Japan Post approves the claim. 
+            If the claim is approved, <strong>25% will be retained as a processing fee</strong> and I will receive 75% of the claim amount.
             Insurance does NOT cover: items with no visible package damage, customs seizure, delivery delays, buyer's remorse, or pre-existing product conditions.
+            I may file claims directly with Japan Post myself to receive 100%.
             {' '}
             <Link href="/terms#insurance" target="_blank" className="text-[#B50012] underline hover:no-underline">
               Full Insurance Terms
