@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import TrustBar from '@/components/TrustBar';
 
+const API_URL = 'https://api.newjapandeals.com';
+src={`${API_URL}${product.image_1}`}
+
 interface Product {
   id: number;
   sku: string;
