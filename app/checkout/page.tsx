@@ -82,14 +82,20 @@ export default function CheckoutPage() {
     }
   };
 
-  // Calculate insurance cost (Japan Post cost x 2)
+  // Calculate insurance cost (Actual Japan Post cost only)
   const getInsuranceCost = () => {
     if (!selectedShipping?.has_insurance) return 0;
     const subtotal = getSubtotal();
-    // Japan Post: ¥50 per ¥20,000 coverage, first ¥20,000 free for EMS
-    // Simplified: estimate based on value
-    const japanPostInsurance = Math.ceil(subtotal / 20000) * 50;
-    return japanPostInsurance * 2; // NJD charges 2x
+    
+    // Japan Post EMS: First ¥20,000 FREE, then ¥50 per additional ¥20,000
+    if (subtotal <= 20000) {
+      return 0; // Free coverage for first ¥20,000
+    }
+    
+    // Calculate for amount above ¥20,000
+    const amountAboveFree = subtotal - 20000;
+    const japanPostCost = Math.ceil(amountAboveFree / 20000) * 50;
+    return japanPostCost;
   };
 
   const insuranceCost = addInsurance ? getInsuranceCost() : 0;
@@ -360,37 +366,66 @@ export default function CheckoutPage() {
                 {/* Optional Insurance */}
                 {selectedShipping?.has_insurance && (
                   <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h2 className="font-bold text-lg mb-4">Optional Insurance</h2>
-                    <label className="flex items-start gap-4 cursor-pointer p-4 rounded-lg border-2 transition-colors hover:border-[#B50012] ${addInsurance ? 'border-[#B50012] bg-red-50' : 'border-gray-200'}">
-                      <input
-                        type="checkbox"
-                        checked={addInsurance}
-                        onChange={(e) => setAddInsurance(e.target.checked)}
-                        className="mt-1 w-5 h-5 rounded border-gray-300 text-[#B50012] focus:ring-[#B50012]"
-                      />
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="font-medium">Add Shipping Insurance</div>
-                            <div className="text-sm text-gray-500 mt-1">
-                              Protect your purchase against loss or damage during transit.
+                    <h2 className="font-bold text-lg mb-4">Shipping Insurance</h2>
+                    
+                    {getInsuranceCost() === 0 ? (
+                      // Free insurance for items under ¥20,000
+                      <div className="p-4 rounded-lg border-2 border-green-200 bg-green-50">
+                        <div className="flex items-center gap-2 text-green-700 font-medium">
+                          <span>✓</span> Basic Insurance Included FREE
+                        </div>
+                        <p className="text-sm text-green-600 mt-2">
+                          Japan Post EMS includes free coverage up to ¥20,000.
+                        </p>
+                      </div>
+                    ) : (
+                      // Paid insurance for items over ¥20,000
+                      <label className={`flex items-start gap-4 cursor-pointer p-4 rounded-lg border-2 transition-colors hover:border-[#B50012] ${addInsurance ? 'border-[#B50012] bg-red-50' : 'border-gray-200'}`}>
+                        <input
+                          type="checkbox"
+                          checked={addInsurance}
+                          onChange={(e) => setAddInsurance(e.target.checked)}
+                          className="mt-1 w-5 h-5 rounded border-gray-300 text-[#B50012] focus:ring-[#B50012]"
+                        />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-medium">Add Full Insurance Coverage</div>
+                              <div className="text-sm text-gray-500 mt-1">
+                                Protect your purchase against loss or damage during transit.
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-bold text-[#B50012]">{formatPrice(getInsuranceCost())}</div>
+                              <div className="text-xs text-gray-500">Japan Post fee</div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="font-bold text-[#B50012]">{formatPrice(getInsuranceCost())}</div>
-                            <div className="text-xs text-gray-500">{formatPriceUSD(getInsuranceCost())}</div>
+                          <div className="mt-3 text-xs text-gray-500 space-y-1">
+                            <div>✓ Coverage for lost packages</div>
+                            <div>✓ Coverage for visible transit damage</div>
+                            <div>✓ We file claims on your behalf</div>
                           </div>
                         </div>
-                        <div className="mt-3 text-xs text-gray-500 space-y-1">
-                          <div>✓ Coverage for lost packages</div>
-                          <div>✓ Coverage for visible transit damage</div>
-                          <div>✓ We file claims on your behalf</div>
-                        </div>
+                      </label>
+                    )}
+                    
+                    {/* Important Notice */}
+                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-xs text-yellow-800">
+                        <strong>Important:</strong> If a claim is successful, a <strong>25% processing fee</strong> will be deducted from the claim payout. 
+                        This covers claim filing, communication with Japan Post, and paperwork handling.
+                        <br /><br />
+                        <strong>Want to keep 100%?</strong> You may file the claim directly with Japan Post yourself (requires Japanese language and documentation).
+                      </p>
+                    </div>
+                    
+                    {!addInsurance && getInsuranceCost() > 0 && (
+                      <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-xs text-red-700">
+                          <strong>⚠️ Without insurance:</strong> No refund is possible for lost or damaged packages. You accept full risk.
+                        </p>
                       </div>
-                    </label>
-                    <p className="text-xs text-gray-400 mt-3">
-                      Insurance is processed through Japan Post. See <Link href="/terms#insurance" className="text-[#B50012] underline">insurance terms</Link> for details.
-                    </p>
+                    )}
                   </div>
                 )}
 
