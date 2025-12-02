@@ -207,7 +207,7 @@ const conditions = Array.from(new Set(products.map(p => p.condition).filter(Bool
                       <div className="relative aspect-square bg-gray-100 overflow-hidden">
                         {product.image_1 ? (
                           <img
-                            src={product.image_1}
+                            src={`https://api.newjapandeals.com${product.image_1}`}
                             alt={product.title_en || product.title_jp}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
