@@ -13,6 +13,7 @@ interface Country {
 }
 
 const API_URL = 'https://api.newjapandeals.com';
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_51Sa5rbRkmKfqHOdmuUOdCIkUKXrFxMORpYybirfNhDz9N44EsbMeZSJ77e545vZJ7xrVPIbrE9HURscAXhT580WB00NxaJ1Vs3';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function CheckoutPage() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [addInsurance, setAddInsurance] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
 
   // Customer info
   const [customerInfo, setCustomerInfo] = useState({
@@ -143,12 +145,57 @@ export default function CheckoutPage() {
     }
 
     setIsSubmitting(true);
+    setPaymentError('');
 
-    // TODO: Implement payment processing (Stripe/PayPal)
-    // For now, just show a placeholder
-    alert('Payment integration coming soon! Order data collected successfully.');
-    
-    setIsSubmitting(false);
+    try {
+      // Prepare order data for Stripe
+      const orderData = {
+        items: items.map(item => ({
+          id: item.id,
+          title: item.title,
+          brand: item.brand,
+          model: item.model,
+          price_jpy: item.price_jpy,
+          image: item.image
+        })),
+        customer: customerInfo,
+        shipping: shippingAddress,
+        shipping_method: {
+          name: selectedShipping?.method_name,
+          id: selectedShipping?.method_id
+        },
+        totals: {
+          subtotal: getSubtotal(),
+          handling: getHandlingFee(),
+          shipping: selectedShipping?.total_price_jpy || 0,
+          insurance: insuranceCost,
+          total: finalTotal
+        }
+      };
+
+      // Create Stripe Checkout Session
+      const response = await fetch(`${API_URL}/api/create-checkout-session.php`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else {
+        setPaymentError(data.error || 'Failed to create checkout session. Please try again.');
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      setPaymentError('Connection error. Please check your internet and try again.');
+      setIsSubmitting(false);
+    }
   };
 
   // If no items or no shipping, show message
@@ -193,6 +240,16 @@ export default function CheckoutPage() {
               Checkout
             </h1>
           </div>
+
+          {/* Payment Error Alert */}
+          {paymentError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <div className="flex items-center gap-2 text-red-700">
+                <span className="text-xl">⚠️</span>
+                <span className="font-medium">{paymentError}</span>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             <div className="grid lg:grid-cols-3 gap-8">
@@ -514,30 +571,39 @@ export default function CheckoutPage() {
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">
                         <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                        Processing...
+                        Redirecting to Payment...
                       </span>
                     ) : (
-                      'Proceed to Payment'
+                      'Pay with Card'
                     )}
                   </button>
 
+                  {/* Stripe Badge */}
+                  <div className="mt-4 flex justify-center items-center gap-2">
+                    <span className="text-xs text-gray-400">Powered by</span>
+                    <svg className="h-6" viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path fill="#635BFF" d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a10.2 10.2 0 0 1-4.56 1.02c-4.01 0-6.83-2.5-6.83-7.48 0-4.19 2.39-7.52 6.3-7.52 3.92 0 5.96 3.28 5.96 7.5 0 .4-.04 1.26-.06 1.56zm-6-5.73c-1.03 0-2.17.73-2.17 2.58h4.25c0-1.85-1.07-2.58-2.08-2.58zm-9.93-.34v12h-4.08V8.21h4.08zm0-4.5v3.04h-4.08V3.71h4.08zm-6.77 4.5L32.65 14l4.36 6.21H32.4l-2.94-4.5-2.94 4.5h-4.6l4.36-6.21-4.18-5.79h4.6l2.74 4.1 2.72-4.1h4.59zM18.54 20.21h-4.08V8.21h4.08v12zm0-13.5h-4.08V3.71h4.08v3zm-6.77-3v16.5h-4.1v-1.4c-.78.94-2.1 1.64-3.87 1.64-3.67 0-6.2-2.99-6.2-6.81 0-3.87 2.51-6.81 6.24-6.81 1.71 0 2.99.66 3.83 1.56V3.71h4.1zm-6.24 13.3c1.6 0 2.74-1.26 2.74-3.17 0-1.93-1.15-3.14-2.74-3.14-1.6 0-2.72 1.21-2.72 3.14 0 1.91 1.12 3.17 2.72 3.17z"/>
+                    </svg>
+                  </div>
+
                   {/* Payment Methods Preview */}
-                  <div className="mt-4 flex justify-center gap-2">
-                    <div className="bg-gray-100 px-3 py-1 rounded text-xs text-gray-600">Visa</div>
-                    <div className="bg-gray-100 px-3 py-1 rounded text-xs text-gray-600">Mastercard</div>
-                    <div className="bg-gray-100 px-3 py-1 rounded text-xs text-gray-600">PayPal</div>
+                  <div className="mt-3 flex justify-center gap-2">
+                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">Visa</div>
+                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">Mastercard</div>
+                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">Amex</div>
+                    <div className="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">JCB</div>
                   </div>
 
                   {/* Trust Points */}
                   <div className="mt-4 pt-4 border-t space-y-2 text-xs text-gray-500">
                     <div className="flex items-center gap-2">
-                      <span className="text-green-500">🔒</span> SSL Encrypted
+                      <span className="text-green-500">🔒</span> SSL Encrypted & Secure
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-green-500">✓</span> Ships from Japan
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-green-500">✓</span> Licensed dealer
+                      <span className="text-green-500">✓</span> Licensed dealer (古物商許可)
                     </div>
                   </div>
                 </div>
