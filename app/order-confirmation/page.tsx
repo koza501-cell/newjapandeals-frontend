@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -25,7 +25,7 @@ interface OrderDetails {
   };
 }
 
-export default function OrderConfirmationPage() {
+function OrderConfirmationContent() {
   const searchParams = useSearchParams();
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,34 +65,38 @@ export default function OrderConfirmationPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#F5F5F0] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-gray-300 border-t-[#B50012] rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading order details...</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <main className="min-h-screen bg-[#F5F5F0] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center">
         <div className="bg-white p-8 rounded-xl shadow-lg text-center max-w-md">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">❌</span>
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">✓</span>
           </div>
-          <h1 className="text-2xl font-bold mb-2">Something went wrong</h1>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <Link href="/" className="bg-[#B50012] text-white px-6 py-3 rounded-lg hover:bg-red-700 transition inline-block">
-            Return to Home
+          <h1 className="text-2xl font-bold text-green-600 mb-2">Payment Successful!</h1>
+          <p className="text-gray-600 mb-2">Your order has been placed.</p>
+          {orderNumber && (
+            <p className="text-gray-800 font-mono font-bold mb-4">{orderNumber}</p>
+          )}
+          <p className="text-gray-500 text-sm mb-6">A confirmation email will be sent shortly.</p>
+          <Link href="/products" className="bg-[#B50012] text-white px-6 py-3 rounded-lg hover:bg-red-700 transition inline-block">
+            Continue Shopping
           </Link>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#F5F5F0] py-12">
+    <div className="min-h-screen bg-[#F5F5F0] py-12">
       <div className="container mx-auto px-4 max-w-3xl">
         {/* Success Header */}
         <div className="bg-white p-8 rounded-xl shadow-lg text-center mb-8">
@@ -194,6 +198,21 @@ export default function OrderConfirmationPage() {
           A confirmation email has been sent to <strong>{order?.customer_email}</strong>
         </p>
       </div>
-    </main>
+    </div>
+  );
+}
+
+export default function OrderConfirmationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-gray-300 border-t-[#B50012] rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <OrderConfirmationContent />
+    </Suspense>
   );
 }
