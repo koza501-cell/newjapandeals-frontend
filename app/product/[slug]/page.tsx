@@ -29,11 +29,11 @@ interface Product {
   year_of_production: string;
   box_papers: boolean;
   mercari_url: string;
-  image_1: string;
-  image_2: string;
-  image_3: string;
-  image_4: string;
-  image_5: string;
+  image_1: string | null;
+  image_2: string | null;
+  image_3: string | null;
+  image_4: string | null;
+  image_5: string | null;
   status: string;
   shipping_category_id: number | null;
 }
@@ -71,9 +71,9 @@ export default function ProductPage() {
   useEffect(() => {
     async function fetchProduct() {
       try {
-        const res = await fetch(`https://api.newjapandeals.com/api/products.php?slug=${params.slug}`, {
-  cache: 'no-store'
-});
+        const res = await fetch(`${API_URL}/api/products.php?slug=${params.slug}`, {
+          cache: 'no-store'
+        });
         const data = await res.json();
         if (data.success && data.product) {
           setProduct(data.product);
@@ -97,6 +97,13 @@ export default function ProductPage() {
     }
   }, [addedToCart]);
 
+  // Helper function to get full image URL
+  const getImageUrl = (imagePath: string | null): string | null => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http')) return imagePath;
+    return `${API_URL}${imagePath}`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -119,8 +126,14 @@ export default function ProductPage() {
     );
   }
 
-  // Get all images
-  const images = [product.image_1, product.image_2, product.image_3, product.image_4, product.image_5].filter(Boolean);
+  // Get all images - safely handle null/undefined
+  const images: string[] = [
+    product.image_1,
+    product.image_2,
+    product.image_3,
+    product.image_4,
+    product.image_5
+  ].filter((img): img is string => Boolean(img));
 
   // Price calculations
   const basePrice = parseFloat(String(product.price_jpy)) || 0;
@@ -155,7 +168,7 @@ export default function ProductPage() {
       brand: product.brand,
       model: product.model,
       price_jpy: basePrice,
-      image: `${API_URL}${product.image_1}`,
+      image: getImageUrl(product.image_1) || '',
       condition: product.condition,
       shipping_category_id: product.shipping_category_id,
     });
@@ -175,7 +188,7 @@ export default function ProductPage() {
         brand: product.brand,
         model: product.model,
         price_jpy: basePrice,
-        image: `${API_URL}${product.image_1}`,
+        image: getImageUrl(product.image_1) || '',
         condition: product.condition,
         shipping_category_id: product.shipping_category_id,
       });
@@ -184,6 +197,8 @@ export default function ProductPage() {
     // Navigate to cart
     router.push('/cart');
   };
+
+  const currentImageUrl = images.length > 0 ? getImageUrl(images[selectedImage]) : null;
 
   return (
     <main>
@@ -206,9 +221,9 @@ export default function ProductPage() {
               {/* Main Image */}
               <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-4">
                 <div className="aspect-square relative">
-                  {images[selectedImage] ? (
+                  {currentImageUrl ? (
                     <img
-                      src={`${API_URL}${images[selectedImage]}`}
+                      src={currentImageUrl}
                       alt={product.title_en}
                       className="w-full h-full object-contain"
                     />
@@ -218,26 +233,33 @@ export default function ProductPage() {
                     </div>
                   )}
                   {/* Condition Badge */}
-                  <div className="absolute top-4 left-4 bg-black/80 text-white px-3 py-1 rounded-full text-sm">
-                    {product.condition}
-                  </div>
+                  {product.condition && (
+                    <div className="absolute top-4 left-4 bg-black/80 text-white px-3 py-1 rounded-full text-sm">
+                      {product.condition}
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Thumbnails */}
               {images.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto pb-2">
-                  {images.map((img, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                        selectedImage === index ? 'border-[#B50012]' : 'border-transparent'
-                      }`}
-                    >
-                      <img src={`${API_URL}${img}`} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
+                  {images.map((img, index) => {
+                    const thumbUrl = getImageUrl(img);
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImage(index)}
+                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                          selectedImage === index ? 'border-[#B50012]' : 'border-transparent'
+                        }`}
+                      >
+                        {thumbUrl && (
+                          <img src={thumbUrl} alt="" className="w-full h-full object-cover" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
