@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+
+const API_URL = 'https://api.newjapandeals.com';
 
 interface Product {
   id: number;
@@ -24,7 +25,7 @@ export default function FeaturedProducts() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const res = await fetch('https://api.newjapandeals.com/api/products.php?featured=1&limit=4');
+        const res = await fetch(`${API_URL}/api/products.php?featured=1&limit=4`);
         const data = await res.json();
         if (data.success) {
           setProducts(data.products || []);
@@ -44,6 +45,12 @@ export default function FeaturedProducts() {
     return Math.round(proxyTotal - ourTotal);
   };
 
+  const getImageUrl = (imagePath: string | null) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http')) return imagePath;
+    return `${API_URL}${imagePath}`;
+  };
+
   if (loading) {
     return (
       <section className="bg-white py-16 md:py-24">
@@ -57,7 +64,6 @@ export default function FeaturedProducts() {
     );
   }
 
-  // If no products, show placeholder
   if (products.length === 0) {
     return (
       <section className="bg-white py-16 md:py-24">
@@ -97,61 +103,66 @@ export default function FeaturedProducts() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <Link 
-              key={product.id} 
-              href={`/products/${product.slug || product.id}`}
-              className="group bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1"
-            >
-              {/* Image */}
-              <div className="relative aspect-square bg-gray-100 overflow-hidden">
-                {product.image_1 ? (
-                  <img
-                    src={product.image_1}
-                    alt={product.title_en || product.title_jp}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <span className="text-4xl">⌚</span>
+          {products.map((product) => {
+            const imageUrl = getImageUrl(product.image_1);
+            return (
+              <Link 
+                key={product.id} 
+                href={`/products/${product.slug || product.id}`}
+                className="group bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1"
+              >
+                {/* Image */}
+                <div className="relative aspect-square bg-gray-100 overflow-hidden">
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={product.title_en || product.title_jp}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <span className="text-4xl">⌚</span>
+                    </div>
+                  )}
+                  
+                  {/* Savings Badge */}
+                  <div className="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
+                    Save ¥{calculateProxySavings(product.price_jpy).toLocaleString()}
                   </div>
-                )}
-                
-                {/* Savings Badge */}
-                <div className="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
-                  Save ¥{calculateProxySavings(product.price_jpy).toLocaleString()}
+
+                  {/* Condition Badge */}
+                  {product.condition && (
+                    <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                      {product.condition}
+                    </div>
+                  )}
                 </div>
 
-                {/* Condition Badge */}
-                <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                  {product.condition}
-                </div>
-              </div>
-
-              {/* Info */}
-              <div className="p-4">
-                <div className="text-sm text-[#B50012] font-medium mb-1">
-                  {product.brand}
-                </div>
-                <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">
-                  {product.title_en || product.title_jp || `${product.brand} ${product.model}`}
-                </h3>
-                <div className="flex items-end justify-between">
-                  <div>
-                    <div className="text-2xl font-bold text-[#1A1A1A]">
-                      ¥{product.price_jpy.toLocaleString()}
+                {/* Info */}
+                <div className="p-4">
+                  <div className="text-sm text-[#B50012] font-medium mb-1">
+                    {product.brand}
+                  </div>
+                  <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">
+                    {product.title_en || product.title_jp || `${product.brand} ${product.model}`}
+                  </h3>
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <div className="text-2xl font-bold text-[#1A1A1A]">
+                        ¥{product.price_jpy.toLocaleString()}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        ~${Math.round(product.price_jpy / 150)} USD
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      ~${Math.round(product.price_jpy / 150)} USD
+                    <div className="text-xs text-gray-400 text-right">
+                      <span className="line-through">Via Proxy: ¥{Math.round(product.price_jpy * 1.3).toLocaleString()}</span>
                     </div>
                   </div>
-                  <div className="text-xs text-gray-400 text-right">
-                    <span className="line-through">Via Proxy: ¥{Math.round(product.price_jpy * 1.3).toLocaleString()}</span>
-                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
 
         {/* View All Button */}
