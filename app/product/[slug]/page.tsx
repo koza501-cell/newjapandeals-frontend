@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import TrustBar from '@/components/TrustBar';
-import ShippingCalculator from '@/components/ShippingCalculator';
 import { useCart } from '@/context/CartContext';
 
 const API_URL = 'https://api.newjapandeals.com';
@@ -38,32 +37,19 @@ interface Product {
   shipping_category_id: number | null;
 }
 
-interface ShippingRate {
-  method_id: number;
-  method_code: string;
-  method_name: string;
-  method_name_ja: string;
-  weight_tier_grams: number;
-  base_price_jpy: number;
-  extra_charge_jpy: number;
-  total_price_jpy: number;
-  estimated_days_min: number;
-  estimated_days_max: number;
-  has_tracking: boolean;
-  has_insurance: boolean;
-  insurance_max_jpy: number;
-}
-
 export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
-  const { addToCart, items } = useCart();
+  const cart = useCart();
   
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedShipping, setSelectedShipping] = useState<ShippingRate | null>(null);
   const [addedToCart, setAddedToCart] = useState(false);
+
+  // Safely get cart items
+  const items = cart?.items || [];
+  const addToCart = cart?.addToCart;
 
   // Check if product is already in cart
   const isInCart = product ? items.some(item => item.id === product.id) : false;
@@ -89,7 +75,6 @@ export default function ProductPage() {
     }
   }, [params.slug]);
 
-  // Reset addedToCart message after 3 seconds
   useEffect(() => {
     if (addedToCart) {
       const timer = setTimeout(() => setAddedToCart(false), 3000);
@@ -97,7 +82,6 @@ export default function ProductPage() {
     }
   }, [addedToCart]);
 
-  // Helper function to get full image URL
   const getImageUrl = (imagePath: string | null): string | null => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
@@ -126,40 +110,21 @@ export default function ProductPage() {
     );
   }
 
-  // Get all images - safely handle null/undefined
-  const images: string[] = [
-    product.image_1,
-    product.image_2,
-    product.image_3,
-    product.image_4,
-    product.image_5
-  ].filter((img): img is string => Boolean(img));
+  // Get all images safely
+  const images: string[] = [];
+  if (product.image_1) images.push(product.image_1);
+  if (product.image_2) images.push(product.image_2);
+  if (product.image_3) images.push(product.image_3);
+  if (product.image_4) images.push(product.image_4);
+  if (product.image_5) images.push(product.image_5);
 
-  // Price calculations
   const basePrice = parseFloat(String(product.price_jpy)) || 0;
   const handlingFee = Math.round(basePrice * 0.10);
-  const shippingFee = selectedShipping?.total_price_jpy || 0;
+  const shippingFee = 2500; // Default estimate
   const totalPrice = basePrice + handlingFee + shippingFee;
-  const deliveryDays = selectedShipping 
-    ? `${selectedShipping.estimated_days_min}-${selectedShipping.estimated_days_max}` 
-    : '--';
-
-  // Proxy comparison (estimate with EMS-like pricing)
-  const estimatedProxyShipping = shippingFee > 0 ? shippingFee + 500 : 3000;
-  const proxyServiceFee = Math.round(basePrice * 0.08);
-  const proxyPaymentFee = 500;
-  const proxyPackingFee = 800;
-  const proxyConsolidation = 1000;
-  const proxyTotal = basePrice + proxyServiceFee + proxyPaymentFee + proxyPackingFee + proxyConsolidation + estimatedProxyShipping;
-  const savings = proxyTotal - totalPrice;
-  const savingsPercent = proxyTotal > 0 ? Math.round((savings / proxyTotal) * 100) : 0;
-
-  const handleShippingSelect = (method: ShippingRate) => {
-    setSelectedShipping(method);
-  };
 
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!product || !addToCart) return;
     
     addToCart({
       id: product.id,
@@ -177,9 +142,8 @@ export default function ProductPage() {
   };
 
   const handleBuyNow = () => {
-    if (!product) return;
+    if (!product || !addToCart) return;
     
-    // Add to cart first if not already in cart
     if (!isInCart) {
       addToCart({
         id: product.id,
@@ -194,7 +158,6 @@ export default function ProductPage() {
       });
     }
     
-    // Navigate to cart
     router.push('/cart');
   };
 
@@ -218,13 +181,12 @@ export default function ProductPage() {
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Left: Images */}
             <div>
-              {/* Main Image */}
               <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-4">
                 <div className="aspect-square relative">
                   {currentImageUrl ? (
                     <img
                       src={currentImageUrl}
-                      alt={product.title_en}
+                      alt={product.title_en || ''}
                       className="w-full h-full object-contain"
                     />
                   ) : (
@@ -232,7 +194,6 @@ export default function ProductPage() {
                       <span className="text-6xl">⌚</span>
                     </div>
                   )}
-                  {/* Condition Badge */}
                   {product.condition && (
                     <div className="absolute top-4 left-4 bg-black/80 text-white px-3 py-1 rounded-full text-sm">
                       {product.condition}
@@ -241,7 +202,6 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              {/* Thumbnails */}
               {images.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto pb-2">
                   {images.map((img, index) => {
@@ -266,7 +226,6 @@ export default function ProductPage() {
 
             {/* Right: Info & Purchase */}
             <div className="space-y-6">
-              {/* Title & Brand */}
               <div>
                 <div className="text-[#B50012] font-medium mb-1">{product.brand}</div>
                 <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A]" style={{ fontFamily: 'Playfair Display, serif' }}>
@@ -277,36 +236,6 @@ export default function ProductPage() {
                 )}
                 <div className="text-sm text-gray-400 mt-2">SKU: {product.sku}</div>
               </div>
-
-              {/* Proxy-Free Pricing Badge */}
-              {selectedShipping && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                  <div className="flex items-center gap-2 text-green-700 font-bold mb-2">
-                    <span>🎯</span> PROXY-FREE PRICING
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <div className="text-gray-500">Via Proxy</div>
-                      <div className="text-red-500 line-through font-medium">~¥{proxyTotal.toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-500">Via Us</div>
-                      <div className="text-green-600 font-bold">¥{totalPrice.toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-500">You Save</div>
-                      <div className="text-green-600 font-bold">¥{savings.toLocaleString()} ({savingsPercent}%)</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Shipping Calculator */}
-              <ShippingCalculator 
-                productId={product.id}
-                onSelectMethod={handleShippingSelect}
-                showTitle={true}
-              />
 
               {/* Price Breakdown */}
               <div className="bg-white rounded-xl shadow-lg p-6">
@@ -322,47 +251,24 @@ export default function ProductPage() {
                     <span>¥{handlingFee.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">
-                      Shipping {selectedShipping ? `(${selectedShipping.method_name})` : ''}
-                    </span>
-                    <span>
-                      {selectedShipping ? `¥${shippingFee.toLocaleString()}` : 'Select above'}
-                    </span>
+                    <span className="text-gray-600">Shipping (estimate)</span>
+                    <span>¥{shippingFee.toLocaleString()}</span>
                   </div>
                   <hr className="my-3" />
                   <div className="flex justify-between text-xl font-bold">
                     <span>Total</span>
-                    <span className="text-[#B50012]">
-                      {selectedShipping ? `¥${totalPrice.toLocaleString()}` : 'Select shipping'}
-                    </span>
+                    <span className="text-[#B50012]">¥{totalPrice.toLocaleString()}</span>
                   </div>
-                  {selectedShipping && (
-                    <div className="text-right text-gray-500 text-sm">
-                      ~${Math.round(totalPrice / 150).toLocaleString()} USD
-                    </div>
-                  )}
+                  <div className="text-right text-gray-500 text-sm">
+                    ~${Math.round(totalPrice / 150).toLocaleString()} USD
+                  </div>
                 </div>
 
-                {selectedShipping && (
-                  <div className="mt-4 text-sm text-gray-500 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span>📦</span> Estimated delivery: {deliveryDays} business days
-                    </div>
-                    {selectedShipping.has_tracking && (
-                      <div className="flex items-center gap-2">
-                        <span>📍</span> Includes tracking number
-                      </div>
-                    )}
-                    {selectedShipping.has_insurance && (
-                      <div className="flex items-center gap-2">
-                        <span>🛡️</span> Insured up to ¥{selectedShipping.insurance_max_jpy.toLocaleString()}
-                      </div>
-                    )}
-                  </div>
-                )}
+                <p className="text-xs text-gray-400 mt-4">
+                  * Final shipping calculated at checkout based on your location
+                </p>
               </div>
 
-              {/* Added to Cart Success Message */}
               {addedToCart && (
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center justify-between">
                   <div className="flex items-center gap-2 text-green-700">
@@ -376,7 +282,6 @@ export default function ProductPage() {
 
               {/* Purchase Buttons */}
               <div className="space-y-3">
-                {/* Add to Cart Button */}
                 {isInCart ? (
                   <Link
                     href="/cart"
@@ -401,7 +306,6 @@ export default function ProductPage() {
                   </button>
                 )}
 
-                {/* Buy Now - International Checkout */}
                 <button 
                   onClick={handleBuyNow}
                   className="w-full bg-[#B50012] hover:bg-[#9A0010] text-white py-4 rounded-xl font-bold text-lg transition-all hover:scale-[1.02] shadow-lg flex items-center justify-center gap-3"
@@ -413,7 +317,6 @@ export default function ProductPage() {
                   </div>
                 </button>
 
-                {/* Mercari Japan Button */}
                 {product.mercari_url ? (
                   <a 
                     href={product.mercari_url}
@@ -434,7 +337,6 @@ export default function ProductPage() {
                 )}
               </div>
 
-              {/* Trust Points */}
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="flex items-center gap-2 text-gray-600">
                   <span className="text-green-500">✓</span> Zero proxy fees
@@ -452,9 +354,8 @@ export default function ProductPage() {
             </div>
           </div>
 
-          {/* Product Details & Description */}
+          {/* Product Details */}
           <div className="grid lg:grid-cols-3 gap-8 mt-12">
-            {/* Specifications */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h3 className="font-bold text-lg mb-4">Specifications</h3>
               <dl className="space-y-3 text-sm">
@@ -513,7 +414,6 @@ export default function ProductPage() {
               </dl>
             </div>
 
-            {/* Description */}
             <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
               <h3 className="font-bold text-lg mb-4">Description</h3>
               {product.description_en ? (
