@@ -31,19 +31,19 @@ interface ShippingRate {
 const API_URL = 'https://api.newjapandeals.com';
 
 export default function CartPage() {
-  const {
-    items,
-    removeFromCart,
-    clearCart,
-    getItemCount,
-    getSubtotal,
-    getHandlingFee,
-    selectedShipping,
-    setSelectedShipping,
-    selectedCountry,
-    setSelectedCountry,
-    getTotal,
-  } = useCart();
+  // Safe cart context access
+  const cart = useCart();
+  const items = cart?.items || [];
+  const removeFromCart = cart?.removeFromCart;
+  const clearCart = cart?.clearCart;
+  const getItemCount = cart?.getItemCount || (() => 0);
+  const getSubtotal = cart?.getSubtotal || (() => 0);
+  const getHandlingFee = cart?.getHandlingFee || (() => 0);
+  const selectedShipping = cart?.selectedShipping || null;
+  const setSelectedShipping = cart?.setSelectedShipping;
+  const selectedCountry = cart?.selectedCountry || '';
+  const setSelectedCountry = cart?.setSelectedCountry;
+  const getTotal = cart?.getTotal || (() => 0);
 
   const [countries, setCountries] = useState<Country[]>([]);
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
@@ -61,16 +61,16 @@ export default function CartPage() {
       calculateCombinedShipping();
     } else {
       setShippingRates([]);
-      setSelectedShipping(null);
+      if (setSelectedShipping) setSelectedShipping(null);
     }
-  }, [selectedCountry, items]);
+  }, [selectedCountry, items.length]);
 
   const fetchCountries = async () => {
     try {
       const res = await fetch(`${API_URL}/shipping.php?action=countries`);
       const data = await res.json();
       if (data.success) {
-        setCountries(data.data);
+        setCountries(data.data || []);
       }
     } catch (err) {
       console.error('Failed to load countries:', err);
@@ -118,6 +118,22 @@ export default function CartPage() {
     return `~$${usd.toLocaleString()}`;
   };
 
+  const handleRemoveItem = (id: number) => {
+    if (removeFromCart) removeFromCart(id);
+  };
+
+  const handleClearCart = () => {
+    if (clearCart) clearCart();
+  };
+
+  const handleCountryChange = (country: string) => {
+    if (setSelectedCountry) setSelectedCountry(country);
+  };
+
+  const handleShippingSelect = (rate: ShippingRate) => {
+    if (setSelectedShipping) setSelectedShipping(rate);
+  };
+
   // Empty cart view
   if (items.length === 0) {
     return (
@@ -157,7 +173,7 @@ export default function CartPage() {
               Shopping Cart ({getItemCount()} {getItemCount() === 1 ? 'item' : 'items'})
             </h1>
             <button
-              onClick={clearCart}
+              onClick={handleClearCart}
               className="text-gray-500 hover:text-red-600 text-sm transition-colors"
             >
               Clear Cart
@@ -198,7 +214,7 @@ export default function CartPage() {
                         <div className="text-xs text-gray-400 mt-1">{item.condition}</div>
                       </div>
                       <button
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => handleRemoveItem(item.id)}
                         className="text-gray-400 hover:text-red-500 transition-colors p-1"
                         aria-label="Remove item"
                       >
@@ -244,7 +260,7 @@ export default function CartPage() {
                   </label>
                   <select
                     value={selectedCountry}
-                    onChange={(e) => setSelectedCountry(e.target.value)}
+                    onChange={(e) => handleCountryChange(e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#B50012]"
                   >
                     <option value="">Select country</option>
@@ -292,7 +308,7 @@ export default function CartPage() {
                                 type="radio"
                                 name="shipping"
                                 checked={selectedShipping?.method_id === rate.method_id}
-                                onChange={() => setSelectedShipping(rate)}
+                                onChange={() => handleShippingSelect(rate)}
                                 className="mt-1 mr-2"
                               />
                               <div className="flex-1">
