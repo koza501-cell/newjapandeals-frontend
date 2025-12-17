@@ -40,9 +40,28 @@ interface CartContextType {
   selectedCountry: string;
   setSelectedCountry: (country: string) => void;
   getTotal: () => number;
+  isLoaded: boolean;
 }
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
+// Default values for when context isn't ready
+const defaultContext: CartContextType = {
+  items: [],
+  addToCart: () => {},
+  removeFromCart: () => {},
+  updateQuantity: () => {},
+  clearCart: () => {},
+  getItemCount: () => 0,
+  getSubtotal: () => 0,
+  getHandlingFee: () => 0,
+  selectedShipping: null,
+  setSelectedShipping: () => {},
+  selectedCountry: '',
+  setSelectedCountry: () => {},
+  getTotal: () => 0,
+  isLoaded: false,
+};
+
+const CartContext = createContext<CartContextType>(defaultContext);
 
 const CART_STORAGE_KEY = 'njd_cart';
 const COUNTRY_STORAGE_KEY = 'njd_country';
@@ -60,7 +79,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const savedCountry = localStorage.getItem(COUNTRY_STORAGE_KEY);
       
       if (savedCart) {
-        setItems(JSON.parse(savedCart));
+        const parsed = JSON.parse(savedCart);
+        if (Array.isArray(parsed)) {
+          setItems(parsed);
+        }
       }
       if (savedCountry) {
         setSelectedCountry(savedCountry);
@@ -96,15 +118,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Reset shipping when items or country change
   useEffect(() => {
     setSelectedShipping(null);
-  }, [items, selectedCountry]);
+  }, [items.length, selectedCountry]);
 
   const addToCart = (product: Omit<CartItem, 'quantity'>) => {
     setItems(currentItems => {
       const existingItem = currentItems.find(item => item.id === product.id);
       
       if (existingItem) {
-        // Item already in cart - show message but don't add duplicate
-        // For watches, typically quantity is 1
         return currentItems;
       }
       
@@ -135,15 +155,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const getItemCount = () => {
-    return items.reduce((total, item) => total + item.quantity, 0);
+    return items.reduce((total, item) => total + (item.quantity || 1), 0);
   };
 
   const getSubtotal = () => {
-    return items.reduce((total, item) => total + (item.price_jpy * item.quantity), 0);
+    return items.reduce((total, item) => total + ((item.price_jpy || 0) * (item.quantity || 1)), 0);
   };
 
   const getHandlingFee = () => {
-    return Math.round(getSubtotal() * 0.10); // 10% handling fee
+    return Math.round(getSubtotal() * 0.10);
   };
 
   const getTotal = () => {
@@ -169,6 +189,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         selectedCountry,
         setSelectedCountry,
         getTotal,
+        isLoaded,
       }}
     >
       {children}
@@ -176,10 +197,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useCart() {
+export function useCart(): CartContextType {
   const context = useContext(CartContext);
-  if (context === undefined) {
-    throw new Error('useCart must be used within a CartProvider');
-  }
+  // Always return context - it will be defaultContext if not in provider
   return context;
 }
