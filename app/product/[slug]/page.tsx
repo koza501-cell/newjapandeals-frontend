@@ -61,9 +61,9 @@ export default function ProductPage() {
           cache: 'no-store'
         });
         const data = await res.json();
-        if (data.success && data.product) {
-          setProduct(data.product);
-        }
+        if (data.success && data.products && data.products.length > 0) {
+  setProduct(data.products[0]);
+}
       } catch (error) {
         console.error('Failed to fetch product:', error);
       } finally {
