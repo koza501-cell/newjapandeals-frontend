@@ -28,11 +28,13 @@ interface Product {
   year_of_production: string;
   box_papers: boolean;
   mercari_url: string;
-  image_1: string | null;
-  image_2: string | null;
-  image_3: string | null;
-  image_4: string | null;
-  image_5: string | null;
+  image?: string;
+  images?: string[];
+  image_1?: string | null;
+  image_2?: string | null;
+  image_3?: string | null;
+  image_4?: string | null;
+  image_5?: string | null;
   status: string;
   shipping_category_id: number | null;
 }
@@ -62,8 +64,8 @@ export default function ProductPage() {
         });
         const data = await res.json();
         if (data.success && data.products && data.products.length > 0) {
-  setProduct(data.products[0]);
-}
+          setProduct(data.products[0]);
+        }
       } catch (error) {
         console.error('Failed to fetch product:', error);
       } finally {
@@ -82,7 +84,7 @@ export default function ProductPage() {
     }
   }, [addedToCart]);
 
-  const getImageUrl = (imagePath: string | null): string | null => {
+  const getImageUrl = (imagePath: string | null | undefined): string | null => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
     return `${API_URL}${imagePath}`;
@@ -110,13 +112,8 @@ export default function ProductPage() {
     );
   }
 
-  // Get all images safely
-  const images: string[] = [];
-  if (product.image_1) images.push(product.image_1);
-  if (product.image_2) images.push(product.image_2);
-  if (product.image_3) images.push(product.image_3);
-  if (product.image_4) images.push(product.image_4);
-  if (product.image_5) images.push(product.image_5);
+  // Get all images from API response
+  const images: string[] = product.images || [];
 
   const basePrice = parseFloat(String(product.price_jpy)) || 0;
   const handlingFee = Math.round(basePrice * 0.10);
@@ -133,7 +130,7 @@ export default function ProductPage() {
       brand: product.brand,
       model: product.model,
       price_jpy: basePrice,
-      image: getImageUrl(product.image_1) || '',
+      image: product.image || product.images?.[0] || '',
       condition: product.condition,
       shipping_category_id: product.shipping_category_id,
     });
@@ -152,7 +149,7 @@ export default function ProductPage() {
         brand: product.brand,
         model: product.model,
         price_jpy: basePrice,
-        image: getImageUrl(product.image_1) || '',
+        image: product.image || product.images?.[0] || '',
         condition: product.condition,
         shipping_category_id: product.shipping_category_id,
       });
