@@ -34,6 +34,7 @@ export interface Product {
   meta_title?: string;
   meta_description?: string;
   created_at: string;
+  mercari_url?: string;
 }
 
 export interface Category {
