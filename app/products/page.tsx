@@ -17,6 +17,8 @@ interface Product {
   price_jpy: number;
   condition: string;
   image_1: string;
+  image: string; 
+  images: string[];  
   status: string;
 }
 
