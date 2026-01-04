@@ -8,7 +8,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, priority = false }: ProductCardProps) {
-  const imageUrl = product.image_1 || '/placeholder-watch.jpg';
+  const imageUrl = product.image || product.images?.[0] || '/placeholder-watch.jpg';
   
   return (
     <article className="product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
