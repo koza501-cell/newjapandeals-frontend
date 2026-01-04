@@ -18,6 +18,8 @@ export interface Product {
   price_gbp: number;
   weight_g: number;
   image_1?: string;
+  image?: string;
+  images?: string[];
   image_2?: string;
   image_3?: string;
   image_4?: string;
