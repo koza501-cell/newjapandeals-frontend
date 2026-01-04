@@ -211,7 +211,7 @@ export default function ProductsPage() {
                       className="group bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1"
                     >
                       <div className="relative aspect-square bg-gray-100 overflow-hidden">
-                        {product.image_1 ? (
+                        {product.image ? (
                           <img
                             src={product.image || ''}
                             alt={product.title_en || product.title_jp}
