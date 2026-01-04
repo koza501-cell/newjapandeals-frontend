@@ -211,7 +211,7 @@ export default function ProductsPage() {
                       <div className="relative aspect-square bg-gray-100 overflow-hidden">
                         {product.image_1 ? (
                           <img
-                            src={`${API_URL}${product.image_1}`}
+                            src={product.image || ''}
                             alt={product.title_en || product.title_jp}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
