@@ -9,9 +9,10 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const imageUrl = product.image || product.images?.[0] || '/placeholder-watch.jpg';
+  const isSold = product.status === 'sold';
   
   return (
-    <article className="product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+    <article className={`product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow ${isSold ? 'opacity-75' : ''}`}>
       {/* Clickable Image & Info - Links to Detail Page */}
       <Link href={`/product/${product.slug}`} className="block">
         {/* Image */}
@@ -21,17 +22,28 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             alt={`${product.title_en} - ${product.brand || 'Japanese Watch'}`}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            className="object-cover hover:scale-105 transition-transform duration-300"
+            className={`object-cover transition-transform duration-300 ${isSold ? 'grayscale' : 'hover:scale-105'}`}
             priority={priority}
           />
+          
+          {/* SOLD badge - prominent overlay */}
+          {isSold && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+              <span className="bg-red-600 text-white px-6 py-2 rounded-lg text-xl font-bold tracking-wider transform -rotate-12 shadow-lg">
+                SOLD
+              </span>
+            </div>
+          )}
+          
           {/* Condition badge */}
-          {product.condition && (
+          {product.condition && !isSold && (
             <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium">
               {product.condition}
             </span>
           )}
+          
           {/* Featured badge */}
-          {product.featured && (
+          {product.featured && !isSold && (
             <span className="absolute top-3 right-3 bg-amber-500 text-white px-2 py-1 rounded text-xs font-medium">
               Featured
             </span>
@@ -59,7 +71,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           
           {/* Price */}
           <div className="flex items-baseline gap-2 mb-3">
-            <span className="text-lg font-bold text-[#B50012]">
+            <span className={`text-lg font-bold ${isSold ? 'text-gray-400 line-through' : 'text-[#B50012]'}`}>
               {formatPrice(product.price_jpy, 'JPY')}
             </span>
             <span className="text-xs text-gray-500">
@@ -71,31 +83,46 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
       {/* Dual Buy Buttons - Outside of Link */}
       <div className="px-4 pb-4 space-y-2">
-        {/* Buy International Button */}
-        <Link
-          href={`/product/${product.slug}`}
-          className="w-full bg-[#B50012] hover:bg-[#9A0010] text-white py-2.5 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
-        >
-          <span>🌍</span>
-          <span>Buy International</span>
-        </Link>
-
-        {/* Buy on Mercari Button */}
-        {product.mercari_url ? (
-          <a
-            href={product.mercari_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full bg-white hover:bg-gray-50 text-gray-700 py-2.5 rounded-lg font-medium text-sm transition-colors border border-gray-300 flex items-center justify-center gap-2"
-          >
-            <span>🇯🇵</span>
-            <span>Buy on Mercari</span>
-          </a>
+        {isSold ? (
+          /* Sold - Show disabled buttons */
+          <>
+            <div className="w-full bg-gray-300 text-gray-500 py-2.5 rounded-lg font-medium text-sm text-center cursor-not-allowed">
+              Sold Out
+            </div>
+            <div className="w-full bg-gray-100 text-gray-400 py-2.5 rounded-lg font-medium text-sm text-center border border-gray-200">
+              No Longer Available
+            </div>
+          </>
         ) : (
-          <div className="w-full bg-gray-100 text-gray-400 py-2.5 rounded-lg font-medium text-sm text-center border border-gray-200 flex items-center justify-center gap-2">
-            <span>🇯🇵</span>
-            <span>Mercari Soon</span>
-          </div>
+          /* Available - Show buy buttons */
+          <>
+            {/* Buy International Button */}
+            <Link
+              href={`/product/${product.slug}`}
+              className="w-full bg-[#B50012] hover:bg-[#9A0010] text-white py-2.5 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
+            >
+              <span>🌍</span>
+              <span>Buy International</span>
+            </Link>
+            
+            {/* Buy on Mercari Button */}
+            {product.mercari_url ? (
+              
+                href={product.mercari_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-white hover:bg-gray-50 text-gray-700 py-2.5 rounded-lg font-medium text-sm transition-colors border border-gray-300 flex items-center justify-center gap-2"
+              >
+                <span>🇯🇵</span>
+                <span>Buy on Mercari</span>
+              </a>
+            ) : (
+              <div className="w-full bg-gray-100 text-gray-400 py-2.5 rounded-lg font-medium text-sm text-center border border-gray-200 flex items-center justify-center gap-2">
+                <span>🇯🇵</span>
+                <span>Mercari Soon</span>
+              </div>
+            )}
+          </>
         )}
       </div>
     </article>
