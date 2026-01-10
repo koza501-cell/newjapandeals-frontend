@@ -160,11 +160,28 @@ export default function FAQPage() {
       ]
     }
   ];
-
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqCategories.flatMap(category => 
+    category.faqs.map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
+  )
+};
   return (
     <main>
       <TrustBar />
-
+       {/* FAQ Schema for SEO */}
+       <script
+        type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+       />
       {/* Hero */}
       <section className="bg-gradient-to-br from-[#1A1A1A] via-[#2A2A2A] to-[#1A1A1A] text-white py-16">
         <div className="container mx-auto px-4 text-center">
