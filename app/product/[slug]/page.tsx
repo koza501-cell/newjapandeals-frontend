@@ -160,9 +160,47 @@ export default function ProductPage() {
 
   const currentImageUrl = images.length > 0 ? getImageUrl(images[selectedImage]) : null;
 
+      // Generate JSON-LD Product Schema for SEO
+    const productSchema = {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": product.title_en || `${product.brand} ${product.model}`,
+          "description": product.description_en || `Authentic ${product.brand} ${product.model} watch from Japan`,
+          "image": currentImageUrl || undefined,
+          "sku": product.sku,
+          "brand": {
+                  "@type": "Brand",
+                  "name": product.brand
+          },
+          "offers": {
+                  "@type": "Offer",
+                  "url": `https://newjapandeals.com/product/${product.slug}`,
+                  "priceCurrency": "JPY",
+                  "price": basePrice,
+                  "availability": product.status === 'sold' ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
+                  "seller": {
+                            "@type": "Organization",
+                            "name": "New Japan Deals"
+                  }
+          }
+    };
+
+    // Update document title dynamically for SEO
+    useEffect(() => {
+          if (product) {
+                  document.title = `${product.title_en || `${product.brand} ${product.model}`} | New Japan Deals`;
+          }
+    }, [product]);
+
   return (
     <main>
       <TrustBar />
+
+      {/* JSON-LD Structured Data for SEO */}
+              <script
+                          type="application/ld+json"
+                          dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+                        />
       
       <div className="bg-[#F5F5F0] min-h-screen py-8">
         <div className="container mx-auto px-4">
