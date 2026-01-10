@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const API_URL = 'https://api.newjapandeals.com';
 
@@ -15,7 +16,9 @@ interface Product {
   model: string;
   price_jpy: number;
   condition: string;
-  image_1: string;
+  image: string;
+  images: string[];
+  status: string;
 }
 
 export default function FeaturedProducts() {
@@ -43,12 +46,6 @@ export default function FeaturedProducts() {
     const proxyTotal = price + (price * 0.08) + 500 + 800 + 1000 + 500 + 3000;
     const ourTotal = price + (price * 0.10) + 2500;
     return Math.round(proxyTotal - ourTotal);
-  };
-
-  const getImageUrl = (imagePath: string | null) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http')) return imagePath;
-    return `${API_URL}${imagePath}`;
   };
 
   if (loading) {
@@ -104,20 +101,24 @@ export default function FeaturedProducts() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {products.map((product) => {
-            const imageUrl = getImageUrl(product.image_1);
+            const imageUrl = product.image || product.images?.[0] || null;
+            const isSold = product.status === 'sold';
+            
             return (
               <Link 
                 key={product.id} 
                 href={`/product/${product.slug || product.id}`}
-                className="group bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1"
+                className={`group bg-white rounded-xl shadow-lg overflow-hidden transition-all ${isSold ? 'opacity-75' : 'hover:shadow-xl hover:-translate-y-1'}`}
               >
                 {/* Image */}
                 <div className="relative aspect-square bg-gray-100 overflow-hidden">
                   {imageUrl ? (
-                    <img
+                    <Image
                       src={imageUrl}
-                      alt={product.title_en || product.title_jp}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      alt={product.title_en || product.title_jp || `${product.brand} ${product.model}`}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      className={`object-cover transition-transform duration-500 ${isSold ? 'grayscale' : 'group-hover:scale-105'}`}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -125,13 +126,24 @@ export default function FeaturedProducts() {
                     </div>
                   )}
                   
+                  {/* SOLD Overlay */}
+                  {isSold && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="bg-red-600 text-white px-4 py-1.5 rounded-lg text-lg font-bold tracking-wider transform -rotate-12 shadow-lg">
+                        SOLD
+                      </span>
+                    </div>
+                  )}
+                  
                   {/* Savings Badge */}
-                  <div className="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
-                    Save ¥{calculateProxySavings(product.price_jpy).toLocaleString()}
-                  </div>
+                  {!isSold && (
+                    <div className="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
+                      Save ¥{calculateProxySavings(product.price_jpy).toLocaleString()}
+                    </div>
+                  )}
 
                   {/* Condition Badge */}
-                  {product.condition && (
+                  {product.condition && !isSold && (
                     <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
                       {product.condition}
                     </div>
@@ -148,16 +160,18 @@ export default function FeaturedProducts() {
                   </h3>
                   <div className="flex items-end justify-between">
                     <div>
-                      <div className="text-2xl font-bold text-[#1A1A1A]">
+                      <div className={`text-2xl font-bold ${isSold ? 'text-gray-400 line-through' : 'text-[#1A1A1A]'}`}>
                         ¥{product.price_jpy.toLocaleString()}
                       </div>
                       <div className="text-xs text-gray-500">
                         ~${Math.round(product.price_jpy / 150)} USD
                       </div>
                     </div>
-                    <div className="text-xs text-gray-400 text-right">
-                      <span className="line-through">Via Proxy: ¥{Math.round(product.price_jpy * 1.3).toLocaleString()}</span>
-                    </div>
+                    {!isSold && (
+                      <div className="text-xs text-gray-400 text-right">
+                        <span className="line-through">Via Proxy: ¥{Math.round(product.price_jpy * 1.3).toLocaleString()}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Link>
