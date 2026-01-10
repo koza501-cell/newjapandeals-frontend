@@ -108,7 +108,7 @@ export default function FeaturedProducts() {
             return (
               <Link 
                 key={product.id} 
-                href={`/products/${product.slug || product.id}`}
+                href={`/product/${product.slug || product.id}`}
                 className="group bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1"
               >
                 {/* Image */}
