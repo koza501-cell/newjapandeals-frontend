@@ -18,6 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+    metadataBase: new URL('https://newjapandeals.com'),
   title: 'New Japan Deals - Premium Japanese Watches',
   description: 'Authentic Japanese watches shipped directly from Japan. Zero proxy fees, single payment, expert packaging.',
   keywords: 'Japanese watches, Seiko, Casio, G-Shock, Orient, Citizen, Japan direct shipping',
@@ -28,6 +29,18 @@ export const metadata: Metadata = {
     locale: 'en_US',
     siteName: 'New Japan Deals',
   },
+    twitter: {
+          card: 'summary_large_image',
+          title: 'New Japan Deals - Premium Japanese Watches',
+          description: 'Authentic Japanese watches shipped directly from Japan.',
+    },
+    alternates: {
+          canonical: '/',
+    },
+    robots: {
+          index: true,
+          follow: true,
+    },
 };
 
 export default function RootLayout({
