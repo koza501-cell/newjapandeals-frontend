@@ -65,6 +65,33 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://api.newjapandeals.com" />
+        
+        {/* Organization Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "New Japan Deals",
+              "legalName": "Yamada Trade LLC (合同会社山田トレード)",
+              "url": "https://newjapandeals.com",
+              "logo": "https://newjapandeals.com/og-image.png",
+              "description": "Authentic Japanese watches shipped directly from Japan. Licensed dealer since 2014.",
+              "foundingDate": "2014",
+              "address": {
+                "@type": "PostalAddress",
+                "addressRegion": "Chiba Prefecture",
+                "addressCountry": "JP"
+              },
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "customer service",
+                "url": "https://newjapandeals.com/contact"
+              }
+            })
+          }}
+        />
       </head>
       <body className="font-sans antialiased">
         <CartProvider>
