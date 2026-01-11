@@ -20,6 +20,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
       url: `${baseUrl}/about`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
@@ -47,13 +53,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Fetch products
   let productPages: MetadataRoute.Sitemap = [];
-  
   try {
     const res = await fetch(`${API_URL}/api/products.php?status=published`, {
       next: { revalidate: 3600 },
     });
     const data = await res.json();
-    
     if (data.success && data.products) {
       productPages = data.products.map((product: any) => ({
         url: `${baseUrl}/product/${product.slug}`,
@@ -63,8 +67,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }));
     }
   } catch (error) {
-    console.error('Sitemap error:', error);
+    console.error('Sitemap products error:', error);
   }
 
-  return [...staticPages, ...productPages];
+  // Fetch blog posts
+  let blogPages: MetadataRoute.Sitemap = [];
+  try {
+    const res = await fetch(`${API_URL}/api/blog.php`, {
+      next: { revalidate: 3600 },
+    });
+    const data = await res.json();
+    if (data.success && data.posts) {
+      blogPages = data.posts.map((post: any) => ({
+        url: `${baseUrl}/blog/${post.slug}`,
+        lastModified: post.published_at ? new Date(post.published_at) : new Date(),
+        changeFrequency: 'monthly' as const,
+        priority: 0.7,
+      }));
+    }
+  } catch (error) {
+    console.error('Sitemap blog error:', error);
+  }
+
+  return [...staticPages, ...productPages, ...blogPages];
 }
