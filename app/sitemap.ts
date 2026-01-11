@@ -45,31 +45,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Fetch all products for dynamic pages
+  // Fetch products
   let productPages: MetadataRoute.Sitemap = [];
   
   try {
     const res = await fetch(`${API_URL}/api/products.php?status=published`, {
-      cache: 'no-store',
+      next: { revalidate: 3600 },
     });
     const data = await res.json();
     
     if (data.success && data.products) {
-      productPages = data.products.map((product: { slug: string; updated_at?: string }) => ({
+      productPages = data.products.map((product: any) => ({
         url: `${baseUrl}/product/${product.slug}`,
-        lastModified: product.updated_at ? new Date(product.updated_at) : new Date(),
+        lastModified: new Date(),
         changeFrequency: 'weekly' as const,
         priority: 0.8,
       }));
     }
   } catch (error) {
-    console.error('Failed to fetch products for sitemap:', error);
+    console.error('Sitemap error:', error);
   }
 
   return [...staticPages, ...productPages];
 }
-```
-
-Push to GitHub. After deploy, your sitemap will be at:
-```
-https://newjapandeals.com/sitemap.xml
