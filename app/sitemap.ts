@@ -1,110 +1,75 @@
 import { MetadataRoute } from 'next';
 
-const BASE_URL = 'https://newjapandeals.com';
 const API_URL = 'https://api.newjapandeals.com';
 
-type ChangeFrequency = 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
-
-interface SitemapEntry {
-  url: string;
-  lastModified?: string | Date;
-  changeFrequency?: ChangeFrequency;
-  priority?: number;
-}
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = 'https://newjapandeals.com';
+
   // Static pages
-  const staticPages: SitemapEntry[] = [
+  const staticPages: MetadataRoute.Sitemap = [
     {
-      url: BASE_URL,
+      url: baseUrl,
       lastModified: new Date(),
-      changeFrequency: 'daily' as ChangeFrequency,
+      changeFrequency: 'daily',
       priority: 1.0,
     },
     {
-      url: `${BASE_URL}/products`,
+      url: `${baseUrl}/products`,
       lastModified: new Date(),
-      changeFrequency: 'daily' as ChangeFrequency,
+      changeFrequency: 'daily',
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/brands`,
+      url: `${baseUrl}/about`,
       lastModified: new Date(),
-      changeFrequency: 'weekly' as ChangeFrequency,
-      priority: 0.8,
+      changeFrequency: 'monthly',
+      priority: 0.7,
     },
     {
-      url: `${BASE_URL}/about`,
+      url: `${baseUrl}/faq`,
       lastModified: new Date(),
-      changeFrequency: 'monthly' as ChangeFrequency,
-      priority: 0.5,
+      changeFrequency: 'monthly',
+      priority: 0.7,
     },
     {
-      url: `${BASE_URL}/contact`,
+      url: `${baseUrl}/why-us`,
       lastModified: new Date(),
-      changeFrequency: 'monthly' as ChangeFrequency,
-      priority: 0.5,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/contact`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
     },
   ];
 
-  // Fetch dynamic data
-  let brandPages: SitemapEntry[] = [];
-  let categoryPages: SitemapEntry[] = [];
-  let productPages: SitemapEntry[] = [];
-
+  // Fetch all products for dynamic pages
+  let productPages: MetadataRoute.Sitemap = [];
+  
   try {
-    // Fetch brands
-    const brandsRes = await fetch(`${API_URL}/products/brands.php`, { next: { revalidate: 3600 } });
-    if (brandsRes.ok) {
-      const brandsData = await brandsRes.json();
-      if (brandsData.success && brandsData.data) {
-        brandPages = brandsData.data.map((brand: { slug: string }) => ({
-          url: `${BASE_URL}/brands/${brand.slug}`,
-          lastModified: new Date(),
-          changeFrequency: 'weekly' as ChangeFrequency,
-          priority: 0.7,
-        }));
-      }
+    const res = await fetch(`${API_URL}/api/products.php?status=published`, {
+      cache: 'no-store',
+    });
+    const data = await res.json();
+    
+    if (data.success && data.products) {
+      productPages = data.products.map((product: { slug: string; updated_at?: string }) => ({
+        url: `${baseUrl}/product/${product.slug}`,
+        lastModified: product.updated_at ? new Date(product.updated_at) : new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.8,
+      }));
     }
   } catch (error) {
-    console.error('Error fetching brands for sitemap:', error);
+    console.error('Failed to fetch products for sitemap:', error);
   }
 
-  try {
-    // Fetch categories
-    const categoriesRes = await fetch(`${API_URL}/products/categories.php`, { next: { revalidate: 3600 } });
-    if (categoriesRes.ok) {
-      const categoriesData = await categoriesRes.json();
-      if (categoriesData.success && categoriesData.data) {
-        categoryPages = categoriesData.data.map((category: { slug: string }) => ({
-          url: `${BASE_URL}/categories/${category.slug}`,
-          lastModified: new Date(),
-          changeFrequency: 'weekly' as ChangeFrequency,
-          priority: 0.7,
-        }));
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching categories for sitemap:', error);
-  }
-
-  try {
-    // Fetch products
-    const productsRes = await fetch(`${API_URL}/products/list.php?limit=1000`, { next: { revalidate: 3600 } });
-    if (productsRes.ok) {
-      const productsData = await productsRes.json();
-      if (productsData.success && productsData.data) {
-        productPages = productsData.data.map((product: { slug: string; updated_at?: string }) => ({
-          url: `${BASE_URL}/product/${product.slug}`,
-          lastModified: product.updated_at ? new Date(product.updated_at) : new Date(),
-          changeFrequency: 'weekly' as ChangeFrequency,
-          priority: 0.8,
-        }));
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching products for sitemap:', error);
-  }
-
-  return [...staticPages, ...brandPages, ...categoryPages, ...productPages];
+  return [...staticPages, ...productPages];
 }
+```
+
+Push to GitHub. After deploy, your sitemap will be at:
+```
+https://newjapandeals.com/sitemap.xml
