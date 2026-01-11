@@ -92,7 +92,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             </Link>
             
             {product.mercari_url ? (
-              
+              <a
                 href={product.mercari_url}
                 target="_blank"
                 rel="noopener noreferrer"
