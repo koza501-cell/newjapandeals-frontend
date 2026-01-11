@@ -13,9 +13,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   
   return (
     <article className={`product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow ${isSold ? 'opacity-75' : ''}`}>
-      {/* Clickable Image & Info - Links to Detail Page */}
       <Link href={`/product/${product.slug}`} className="block">
-        {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-gray-100">
           <Image
             src={imageUrl}
@@ -26,7 +24,6 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             priority={priority}
           />
           
-          {/* SOLD badge - prominent overlay */}
           {isSold && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
               <span className="bg-red-600 text-white px-6 py-2 rounded-lg text-xl font-bold tracking-wider transform -rotate-12 shadow-lg">
@@ -35,14 +32,12 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             </div>
           )}
           
-          {/* Condition badge */}
           {product.condition && !isSold && (
             <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium">
               {product.condition}
             </span>
           )}
           
-          {/* Featured badge */}
           {product.featured && !isSold && (
             <span className="absolute top-3 right-3 bg-amber-500 text-white px-2 py-1 rounded text-xs font-medium">
               Featured
@@ -50,26 +45,21 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           )}
         </div>
 
-        {/* Content */}
         <div className="p-4">
-          {/* Brand */}
           {product.brand && (
             <p className="text-sm text-[#B50012] font-medium mb-1 uppercase tracking-wide">
               {product.brand}
             </p>
           )}
           
-          {/* Title */}
           <h3 className="font-semibold text-[#1A1A1A] mb-1 line-clamp-2 text-sm md:text-base">
             {product.title_en}
           </h3>
           
-          {/* Model */}
           {product.model && (
             <p className="text-xs text-gray-500 mb-2">{product.model}</p>
           )}
           
-          {/* Price */}
           <div className="flex items-baseline gap-2 mb-3">
             <span className={`text-lg font-bold ${isSold ? 'text-gray-400 line-through' : 'text-[#B50012]'}`}>
               {formatPrice(product.price_jpy, 'JPY')}
@@ -81,10 +71,8 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         </div>
       </Link>
 
-      {/* Dual Buy Buttons - Outside of Link */}
       <div className="px-4 pb-4 space-y-2">
         {isSold ? (
-          /* Sold - Show disabled buttons */
           <>
             <div className="w-full bg-gray-300 text-gray-500 py-2.5 rounded-lg font-medium text-sm text-center cursor-not-allowed">
               Sold Out
@@ -94,9 +82,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             </div>
           </>
         ) : (
-          /* Available - Show buy buttons */
           <>
-            {/* Buy International Button */}
             <Link
               href={`/product/${product.slug}`}
               className="w-full bg-[#B50012] hover:bg-[#9A0010] text-white py-2.5 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
@@ -105,7 +91,6 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               <span>Buy International</span>
             </Link>
             
-            {/* Buy on Mercari Button */}
             {product.mercari_url ? (
               
                 href={product.mercari_url}
