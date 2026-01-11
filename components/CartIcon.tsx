@@ -1,5 +1,4 @@
 'use client';
-
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 
@@ -11,7 +10,7 @@ export default function CartIcon() {
     <Link 
       href="/cart" 
       className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors"
-      aria-label={`Shopping cart with ${itemCount} items`}
+      aria-label={`Shopping cart with ${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
     >
       {/* Cart Icon */}
       <svg 
@@ -20,6 +19,7 @@ export default function CartIcon() {
         fill="none" 
         viewBox="0 0 24 24" 
         stroke="currentColor"
+        aria-hidden="true"
       >
         <path 
           strokeLinecap="round" 
@@ -31,7 +31,10 @@ export default function CartIcon() {
       
       {/* Item Count Badge */}
       {itemCount > 0 && (
-        <span className="absolute -top-1 -right-1 bg-[#B50012] text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+        <span 
+          className="absolute -top-1 -right-1 bg-[#B50012] text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
+          aria-hidden="true"
+        >
           {itemCount > 9 ? '9+' : itemCount}
         </span>
       )}
