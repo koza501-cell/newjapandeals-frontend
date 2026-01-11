@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import TrustBar from '@/components/TrustBar';
+import BreadcrumbSchema from '@/components/BreadcrumbSchema';
 
 const API_URL = 'https://api.newjapandeals.com';
 
@@ -34,8 +36,8 @@ export default function ProductsPage() {
     async function fetchData() {
       try {
         const productsRes = await fetch(`${API_URL}/api/products.php?status=published`, {
-  cache: 'no-store'
-});
+          cache: 'no-store'
+        });
         const productsData = await productsRes.json();
         if (productsData.success) {
           setProducts(productsData.products || []);
@@ -91,6 +93,14 @@ export default function ProductsPage() {
   return (
     <main>
       <TrustBar />
+      
+      {/* Breadcrumb Schema */}
+      <BreadcrumbSchema 
+        items={[
+          { name: 'Home', url: 'https://newjapandeals.com' },
+          { name: 'Products', url: 'https://newjapandeals.com/products' }
+        ]} 
+      />
       
       <section className="bg-[#1A1A1A] text-white py-12">
         <div className="container mx-auto px-4">
@@ -204,7 +214,7 @@ export default function ProductsPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {filteredProducts.map((product) => (
+                  {filteredProducts.map((product, index) => (
                     <Link 
                       key={product.id}
                       href={`/product/${product.slug || product.id}`}
@@ -212,10 +222,13 @@ export default function ProductsPage() {
                     >
                       <div className="relative aspect-square bg-gray-100 overflow-hidden">
                         {product.image ? (
-                          <img
-                            src={product.image || ''}
-                            alt={product.title_en || product.title_jp}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          <Image
+                            src={product.image}
+                            alt={`${product.title_en || product.title_jp} - ${product.brand} Japanese Watch`}
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            loading={index < 6 ? 'eager' : 'lazy'}
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -227,9 +240,11 @@ export default function ProductsPage() {
                           Save ¥{calculateSavings(product.price_jpy).toLocaleString()}
                         </div>
 
-                        <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                          {product.condition}
-                        </div>
+                        {product.condition && (
+                          <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                            {product.condition}
+                          </div>
+                        )}
                       </div>
 
                       <div className="p-4">
