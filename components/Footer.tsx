@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="bg-secondary text-white">
+    <footer className="bg-secondary text-white" role="contentinfo">
       {/* Main footer */}
       <div className="container-custom py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -13,14 +13,14 @@ export default function Footer() {
               Your trusted source for authentic Japanese watches. Direct from Japan with worldwide shipping.
             </p>
             <p className="text-sm text-gray-500">
-              古物商許可番号: 第441200001622号
+              <span aria-label="Antique Dealer License Number">古物商許可番号:</span> 第441200001622号
             </p>
           </div>
 
           {/* Shop */}
-          <div>
+          <nav aria-label="Shop by brand">
             <h4 className="font-semibold mb-4">Shop by Brand</h4>
-            <ul className="space-y-2 text-gray-400">
+            <ul className="space-y-2 text-gray-400" role="list">
               <li><Link href="/brand/seiko" className="hover:text-gold transition-colors">Seiko Watches</Link></li>
               <li><Link href="/brand/citizen" className="hover:text-gold transition-colors">Citizen Watches</Link></li>
               <li><Link href="/brand/casio" className="hover:text-gold transition-colors">Casio Watches</Link></li>
@@ -28,12 +28,12 @@ export default function Footer() {
               <li><Link href="/brand/orient" className="hover:text-gold transition-colors">Orient Watches</Link></li>
               <li><Link href="/brand/vintage" className="hover:text-gold transition-colors">Vintage Watches</Link></li>
             </ul>
-          </div>
+          </nav>
 
           {/* Customer Service */}
-          <div>
+          <nav aria-label="Customer service">
             <h4 className="font-semibold mb-4">Customer Service</h4>
-            <ul className="space-y-2 text-gray-400">
+            <ul className="space-y-2 text-gray-400" role="list">
               <li><Link href="/why-us" className="hover:text-gold transition-colors">Why Buy From Us</Link></li>
               <li><Link href="/faq" className="hover:text-gold transition-colors">FAQ</Link></li>
               <li><Link href="/contact" className="hover:text-gold transition-colors">Contact Us</Link></li>
@@ -42,22 +42,26 @@ export default function Footer() {
               <li><Link href="/returns" className="hover:text-gold transition-colors">Returns & Refunds</Link></li>
               <li><Link href="/about" className="hover:text-gold transition-colors">About Us</Link></li>
             </ul>
-          </div>
+          </nav>
 
           {/* Legal */}
           <div>
-            <h4 className="font-semibold mb-4">Legal</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li><Link href="/terms" className="hover:text-gold transition-colors">Terms of Service</Link></li>
-              <li><Link href="/privacy" className="hover:text-gold transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/shipping-policy" className="hover:text-gold transition-colors">Shipping Policy</Link></li>
-            </ul>
+            <nav aria-label="Legal pages">
+              <h4 className="font-semibold mb-4">Legal</h4>
+              <ul className="space-y-2 text-gray-400" role="list">
+                <li><Link href="/terms" className="hover:text-gold transition-colors">Terms of Service</Link></li>
+                <li><Link href="/privacy" className="hover:text-gold transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/shipping-policy" className="hover:text-gold transition-colors">Shipping Policy</Link></li>
+              </ul>
+            </nav>
             
-            <h4 className="font-semibold mt-6 mb-4">Payment Methods</h4>
-            <div className="flex gap-2 text-gray-400">
-              <span className="bg-white/10 px-2 py-1 rounded text-sm">Visa</span>
-              <span className="bg-white/10 px-2 py-1 rounded text-sm">Mastercard</span>
-              <span className="bg-white/10 px-2 py-1 rounded text-sm">PayPal</span>
+            <div className="mt-6">
+              <h4 className="font-semibold mb-4">Payment Methods</h4>
+              <div className="flex gap-2 text-gray-400" role="list" aria-label="Accepted payment methods">
+                <span className="bg-white/10 px-2 py-1 rounded text-sm" role="listitem">Visa</span>
+                <span className="bg-white/10 px-2 py-1 rounded text-sm" role="listitem">Mastercard</span>
+                <span className="bg-white/10 px-2 py-1 rounded text-sm" role="listitem">PayPal</span>
+              </div>
             </div>
           </div>
         </div>
@@ -70,7 +74,7 @@ export default function Footer() {
             © {new Date().getFullYear()} New Japan Deals. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            <span className="text-gray-500 text-sm">We ship worldwide 🌍</span>
+            <span className="text-gray-500 text-sm">We ship worldwide <span aria-label="worldwide">🌍</span></span>
           </div>
         </div>
       </div>
