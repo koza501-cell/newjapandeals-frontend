@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import Link from 'next/link';
 import CartIcon from '@/components/CartIcon';
@@ -11,6 +10,7 @@ export default function Header() {
     { href: '/', label: 'Home' },
     { href: '/products', label: 'Shop' },
     { href: '/why-us', label: 'Why Us' },
+    { href: '/blog', label: 'Blog' },
     { href: '/about', label: 'About' },
     { href: '/faq', label: 'FAQ' },
     { href: '/contact', label: 'Contact' },
