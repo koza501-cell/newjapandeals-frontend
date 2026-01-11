@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     siteName: 'New Japan Deals',
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/og-image.png',
         width: 1200,
         height: 630,
         alt: 'New Japan Deals - Japanese Watches',
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'New Japan Deals - Premium Japanese Watches',
     description: 'Authentic Japanese watches shipped directly from Japan.',
-    images: ['/og-image.jpg'],
+    images: ['/og-image.png'],
   },
   alternates: {
     canonical: '/',
