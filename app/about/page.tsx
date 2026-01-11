@@ -158,4 +158,136 @@ export default function AboutPage() {
                 </div>
               </div>
               <div className="flex items-start gap-4">
-                <div className="w
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-green-600">✓</span>
+                </div>
+                <div>
+                  <h4 className="font-bold mb-1">Transparent Pricing</h4>
+                  <p className="text-gray-600 text-sm">No hidden fees, no surprise charges. Our simple 10% handling fee covers everything. What you see is what you pay.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Company Info */}
+      <section className="py-16 bg-[#1A1A1A] text-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold mb-8 text-center" style={{ fontFamily: 'Playfair Display, serif' }}>
+              Licensed & Registered in Japan
+            </h2>
+
+            <p className="text-gray-300 text-center mb-8 max-w-2xl mx-auto">
+              Unlike anonymous online sellers or proxy services, we are a fully registered and licensed company in Japan. This means legal accountability, professional standards, and the security of buying from a legitimate business.
+            </p>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="bg-white/10 p-6 rounded-xl">
+                <h3 className="font-bold text-xl mb-4 text-[#C9A962]">Company Information</h3>
+                <ul className="space-y-3 text-gray-300">
+                  <li><strong>Company:</strong> 合同会社山田トレード</li>
+                  <li><strong>English:</strong> Yamada Trade LLC</li>
+                  <li><strong>Location:</strong> Chiba Prefecture, Japan</li>
+                  <li><strong>Established:</strong> Selling online since 2014</li>
+                  <li><strong>Specialty:</strong> Vintage & JDM Japanese Watches</li>
+                </ul>
+              </div>
+              <div className="bg-white/10 p-6 rounded-xl">
+                <h3 className="font-bold text-xl mb-4 text-[#C9A962]">Official License</h3>
+                <ul className="space-y-3 text-gray-300">
+                  <li><strong>License Type:</strong> 古物商許可</li>
+                  <li><strong>English:</strong> Antique Dealer License</li>
+                  <li><strong>Issued By:</strong> 千葉県公安委員会</li>
+                  <li><strong>Authority:</strong> Chiba Prefectural Public Safety Commission</li>
+                  <li><strong>License No:</strong> 第441200001622号</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-8 text-center">
+              <p className="text-gray-400 mb-4">
+                We are a legally registered company in Japan, licensed by the Chiba Prefectural Public Safety Commission to deal in secondhand goods. This license requires background checks, regular inspections, and adherence to strict business practices.
+              </p>
+              <a 
+                href="https://www.yamadatrade.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-[#C9A962] hover:underline"
+              >
+                Visit our parent company website →
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Promise */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-8" style={{ fontFamily: 'Playfair Display, serif' }}>
+              Our Promise to You
+            </h2>
+
+            <p className="text-gray-700 mb-12 max-w-2xl mx-auto">
+              We believe in building long-term relationships with collectors, not just making one-time sales. Here's what you can always expect from New Japan Deals:
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-8 mb-12">
+              <div>
+                <div className="text-5xl mb-4">📸</div>
+                <h3 className="font-bold text-xl mb-2">Actual Images</h3>
+                <p className="text-gray-600">Every photo is of the actual watch you'll receive. No stock photos, no surprises. We photograph every angle so you know exactly what you're getting.</p>
+              </div>
+              <div>
+                <div className="text-5xl mb-4">📝</div>
+                <h3 className="font-bold text-xl mb-2">Honest Descriptions</h3>
+                <p className="text-gray-600">We tell you exactly what we know. If it's junk, we say it's junk. If there's a scratch, we mention it. No hidden surprises, ever.</p>
+              </div>
+              <div>
+                <div className="text-5xl mb-4">🤝</div>
+                <h3 className="font-bold text-xl mb-2">Real Support</h3>
+                <p className="text-gray-600">Questions? Just ask. We're real people who genuinely love watches. We'll respond promptly and honestly to any inquiry.</p>
+              </div>
+            </div>
+
+            <div className="bg-[#F5F5F0] p-8 rounded-xl">
+              <p className="text-xl text-gray-700 italic mb-6">
+                "We're not just selling watches. We're sharing our passion with collectors around the world, one timepiece at a time. Every watch that leaves Japan through New Japan Deals carries a piece of our commitment to quality and authenticity."
+              </p>
+              <p className="text-gray-500">— Founder, New Japan Deals</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-16 bg-gradient-to-r from-[#B50012] to-[#8B0000] text-white">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6" style={{ fontFamily: 'Playfair Display, serif' }}>
+            Ready to Find Your Next Treasure?
+          </h2>
+          <p className="text-white/80 mb-8 max-w-2xl mx-auto">
+            Browse our collection of authentic Japanese watches and experience the New Japan Deals difference. Join hundreds of satisfied collectors who've discovered a better way to buy from Japan.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link 
+              href="/products"
+              className="inline-flex items-center justify-center gap-2 bg-white text-[#B50012] px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-all hover:scale-105"
+            >
+              Browse Watches
+            </Link>
+            <Link 
+              href="/contact"
+              className="inline-flex items-center justify-center gap-2 bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white/10 transition-all"
+            >
+              Contact Us
+            </Link>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
