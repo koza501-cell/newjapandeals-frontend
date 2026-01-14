@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next';
 const API_URL = 'https://api.newjapandeals.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://newjapandeals.com';
+  const baseUrl = 'https://www.newjapandeals.com';
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
