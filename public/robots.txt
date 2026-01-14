@@ -1,0 +1,30 @@
+# NewJapanDeals.com Robots.txt
+# Updated: January 2026
+
+User-Agent: *
+Allow: /
+
+# Block WordPress legacy URLs
+Disallow: /wp-content/
+Disallow: /wp-admin/
+Disallow: /wp-includes/
+Disallow: /wp-json/
+Disallow: /?p=
+Disallow: /product-category/
+Disallow: /shop/
+Disallow: /xmlrpc.php
+Disallow: /wp-login.php
+Disallow: /wp-register.php
+Disallow: /feed/
+Disallow: /trackback/
+Disallow: /comments/
+
+# Block admin and internal pages
+Disallow: /api/
+Disallow: /admin/
+Disallow: /checkout
+Disallow: /cart
+Disallow: /order-success
+
+# Sitemap location
+Sitemap: https://www.newjapandeals.com/sitemap.xml
