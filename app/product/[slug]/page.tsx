@@ -469,4 +469,22 @@ export default function ProductPage() {
 
               <ul className="grid grid-cols-2 gap-3 text-sm" aria-label="Benefits">
                 <li className="flex items-center gap-2 text-gray-600">
-                  <span className="text-green-500" aria-hidden="true">✓</span> Zero p
+                  <span className="text-green-500" aria-hidden="true">✓</span> Zero proxy fees
+                </li>
+                              <li className="flex items-center gap-2 text-gray-600">
+                                              <span className="text-green-500" aria-hidden="true">✓</span>span> Free inspection
+                              </li>
+                            <li className="flex items-center gap-2 text-gray-600">
+                                            <span className="text-green-500" aria-hidden="true">✓</span>span> Secure shipping
+                            </li>
+                            <li className="flex items-center gap-2 text-gray-600">
+                                            <span className="text-green-500" aria-hidden="true">✓</span>span> Buyer protection
+                            </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </main>
+      );
+      }
+      }</li>
