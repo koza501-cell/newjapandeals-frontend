@@ -1,4 +1,4 @@
-'use client'; // Trigger rebuild
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -471,21 +471,20 @@ export default function ProductPage() {
                 <li className="flex items-center gap-2 text-gray-600">
                   <span className="text-green-500" aria-hidden="true">✓</span> Zero proxy fees
                 </li>
-                              <li className="flex items-center gap-2 text-gray-600">
-                                              <span className="text-green-500" aria-hidden="true">✓</span> Free inspection
-                              </li>
-                            <li className="flex items-center gap-2 text-gray-600">
-                                            <span className="text-green-500" aria-hidden="true">✓</span> Secure shipping
-                            </li>
-                            <li className="flex items-center gap-2 text-gray-600">
-                                            <span className="text-green-500" aria-hidden="true">✓</span> Buyer protection
-                            </li>
+                <li className="flex items-center gap-2 text-gray-600">
+                  <span className="text-green-500" aria-hidden="true">✓</span> Free inspection
+                </li>
+                <li className="flex items-center gap-2 text-gray-600">
+                  <span className="text-green-500" aria-hidden="true">✓</span> Secure shipping
+                </li>
+                <li className="flex items-center gap-2 text-gray-600">
+                  <span className="text-green-500" aria-hidden="true">✓</span> Buyer protection
+                </li>
               </ul>
             </div>
           </div>
         </div>
-      </main>
-        );
-      }
-      );
-      }
+      </div>
+    </main>
+  );
+}
