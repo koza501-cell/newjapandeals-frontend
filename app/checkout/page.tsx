@@ -13,7 +13,7 @@ interface Country {
   country_name: string;
 }
 
-const API_URL = 'https://api.newjapandeals.com';
+const API_URL = 'https://api.newjapandeals.com/api';
 const PAYPAL_CLIENT_ID = 'AZk2mMrLkn-j4MdM1RQ5t8MYcquM3apovc2YD835B2Wn5MLN4CIe9fNZ6QjbFOCsD7fRs1p7evKy1bAX';
 
 export default function CheckoutPage() {
@@ -25,6 +25,7 @@ export default function CheckoutPage() {
     selectedShipping,
     selectedCountry,
     getTotal,
+    clearCart,
   } = useCart();
 
   const [countries, setCountries] = useState<Country[]>([]);
@@ -165,7 +166,7 @@ export default function CheckoutPage() {
     setPaymentError('');
 
     try {
-      const response = await fetch(`${API_URL}/api/create-checkout-session.php`, {
+      const response = await fetch(`${API_URL}/create-checkout-session.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(getOrderData()),
@@ -206,7 +207,7 @@ export default function CheckoutPage() {
           throw new Error('Please fill in all required fields');
         }
 
-        const response = await fetch(`${API_URL}/api/paypal-create-order.php`, {
+        const response = await fetch(`${API_URL}/paypal-create-order.php`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(getOrderData()),
@@ -221,7 +222,7 @@ export default function CheckoutPage() {
       onApprove: async (data: any) => {
         setIsSubmitting(true);
         
-        const response = await fetch(`${API_URL}/api/paypal-capture-order.php`, {
+        const response = await fetch(`${API_URL}/paypal-capture-order.php`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ orderID: data.orderID }),
@@ -230,6 +231,8 @@ export default function CheckoutPage() {
         const result = await response.json();
         
         if (result.success) {
+          // Clear cart
+          if (clearCart) clearCart();
           localStorage.removeItem('njd_cart');
           localStorage.removeItem('njd_shipping');
           router.push(`/order-confirmation?order=${result.orderNumber}`);
