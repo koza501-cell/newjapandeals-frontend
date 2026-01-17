@@ -9,7 +9,6 @@ interface Country {
   country_code: string;
   country_name: string;
   zone_id: number;
-  zone_number: number;
 }
 
 interface ShippingRate {
@@ -28,7 +27,7 @@ interface ShippingRate {
   insurance_max_jpy: number;
 }
 
-const API_URL = 'https://api.newjapandeals.com';
+const API_URL = 'https://api.newjapandeals.com/api';
 
 export default function CartPage() {
   // Safe cart context access
@@ -146,7 +145,7 @@ export default function CartPage() {
                 <div className="text-6xl mb-6">🛒</div>
                 <h1 className="text-2xl font-bold text-gray-800 mb-4">Your Cart is Empty</h1>
                 <p className="text-gray-500 mb-8">
-                  Looks like you haven't added any watches to your cart yet.
+                  Looks like you haven&apos;t added any watches to your cart yet.
                 </p>
                 <Link
                   href="/products"
