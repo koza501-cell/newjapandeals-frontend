@@ -13,7 +13,6 @@ interface Product {
   slug: string;
   title_en: string;
   title_jp: string;
-  description_en: string;
   brand: string;
   model: string;
   price_jpy: number;
