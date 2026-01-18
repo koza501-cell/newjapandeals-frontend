@@ -278,10 +278,10 @@ export default function ProductPage() {
             {/* Description */}
             {product.description_en && (
                       <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
-                                        <h2 className="font-bold text-lg mb-4">Description</h2>h2>
-                                        <p className="text-gray-600 whitespace-pre-line">{product.description_en}</p>p>
-                      </div>div>
-                        )}</div>
+                                        <h2 className="font-bold text-lg mb-4">Description</h2>
+                                        <p className="text-gray-600 whitespace-pre-line">{product.description_en}</p>
+                      </div>
+                        )}
         </div>
       </div>
     </main>
