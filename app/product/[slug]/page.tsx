@@ -18,6 +18,7 @@ interface Product {
   price_jpy: number;
   condition: string;
   mercari_url: string;
+    description_en?: string;
   image?: string;
   images?: string[];
   status: string;
@@ -273,7 +274,14 @@ export default function ProductPage() {
                 <span className="text-green-500">✓</span> Buyer protection
               </div>
             </div>
-          </div>
+
+            {/* Description */}
+            {product.description_en && (
+                      <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
+                                        <h2 className="font-bold text-lg mb-4">Description</h2>h2>
+                                        <p className="text-gray-600 whitespace-pre-line">{product.description_en}</p>p>
+                      </div>div>
+                        )}</div>
         </div>
       </div>
     </main>
