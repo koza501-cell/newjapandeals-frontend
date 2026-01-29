@@ -11,14 +11,26 @@ interface Product {
   id: number;
   sku: string;
   slug: string;
+  title: string;
   title_en: string;
   title_jp: string;
+  description: string;
+  description_en: string;
+  description_jp: string;
   brand: string;
   model: string;
-  price_jpy: number;
+  reference_number: string;
   condition: string;
+  case_size: string;
+  case_material: string;
+  movement_type: string;
+  strap_type: string;
+  year_of_production: string;
+  box_papers: boolean;
+  price_jpy: number;
+  price_usd: number;
+  weight_g: number;
   mercari_url: string;
-    description_en?: string;
   image?: string;
   images?: string[];
   status: string;
@@ -48,8 +60,8 @@ export default function ProductPage() {
     fetch(`${API_URL}/api/products.php?slug=${slug}`)
       .then(res => res.json())
       .then(data => {
-        if (!cancelled && data.success && data.products?.length > 0) {
-          setProduct(data.products[0]);
+        if (!cancelled && data.success && (data.products?.length > 0 || data.data?.length > 0)) {
+          setProduct(data.products?.[0] || data.data?.[0]);
         }
       })
       .catch(err => console.error('Fetch error:', err))
@@ -104,7 +116,7 @@ export default function ProductPage() {
     addToCart({
       id: product.id,
       slug: product.slug,
-      title: product.title_en || `${product.brand} ${product.model}`,
+      title: product.title_en || product.title || `${product.brand} ${product.model}`,
       brand: product.brand,
       model: product.model,
       price_jpy: basePrice,
@@ -119,6 +131,20 @@ export default function ProductPage() {
     if (!isInCart) handleAddToCart();
     router.push('/cart');
   };
+
+  // Build specs array for display
+  const specs = [
+    { label: 'Brand', value: product.brand },
+    { label: 'Model', value: product.model },
+    { label: 'Reference Number', value: product.reference_number },
+    { label: 'Condition', value: product.condition },
+    { label: 'Case Size', value: product.case_size },
+    { label: 'Case Material', value: product.case_material },
+    { label: 'Movement', value: product.movement_type },
+    { label: 'Strap', value: product.strap_type },
+    { label: 'Year', value: product.year_of_production },
+    { label: 'Box & Papers', value: product.box_papers ? 'Yes' : 'No' },
+  ].filter(spec => spec.value && spec.value !== 'No');
 
   return (
     <main className="bg-gray-50 min-h-screen py-8">
@@ -178,7 +204,7 @@ export default function ProductPage() {
             <div>
               <p className="text-red-600 font-medium mb-1">{product.brand}</p>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                {product.title_en || `${product.brand} ${product.model}`}
+                {product.title_en || product.title || `${product.brand} ${product.model}`}
               </h1>
               {product.title_jp && <p className="text-gray-500 mt-1">{product.title_jp}</p>}
               <p className="text-sm text-gray-400 mt-2">SKU: {product.sku}</p>
@@ -207,7 +233,7 @@ export default function ProductPage() {
                 <span className="text-red-600">¥{totalPrice.toLocaleString()}</span>
               </div>
               <p className="text-right text-gray-500 text-sm">~${Math.round(totalPrice / 150)} USD</p>
-              <p className="text-xs text-gray-400 mt-4">* Final shipping calculated at checkout</p>
+              <p className="text-xs text-gray-400 mt-4">* Final shipping calculated at checkout based on destination</p>
             </div>
 
             {/* Cart notification */}
@@ -274,15 +300,66 @@ export default function ProductPage() {
                 <span className="text-green-500">✓</span> Buyer protection
               </div>
             </div>
-
-            {/* Description */}
-              {product.description_en && (
-                <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
-                  <h2 className="font-bold text-lg mb-4">Description</h2>
-                  <p className="text-gray-600 whitespace-pre-line">{product.description_en}</p>
-                </div>
-              )}
+          </div>
         </div>
+
+        {/* Description Section */}
+        {product.description_en && (
+          <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
+            <h2 className="font-bold text-xl mb-4">Description</h2>
+            <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+              {product.description_en}
+            </p>
+          </div>
+        )}
+
+        {/* Japanese Description */}
+        {product.description_jp && (
+          <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
+            <h2 className="font-bold text-xl mb-4">日本語説明 (Japanese Description)</h2>
+            <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+              {product.description_jp}
+            </p>
+          </div>
+        )}
+
+        {/* Specifications */}
+        {specs.length > 0 && (
+          <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
+            <h2 className="font-bold text-xl mb-4">Specifications</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              {specs.map((spec, idx) => (
+                <div key={idx} className="flex justify-between py-2 border-b border-gray-100">
+                  <span className="text-gray-600">{spec.label}</span>
+                  <span className="font-medium text-gray-900">{spec.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Why Buy From Us */}
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-6 mt-6">
+          <h2 className="font-bold text-xl mb-4">Why Buy From New Japan Deals?</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="text-3xl mb-2">💰</div>
+              <h3 className="font-bold mb-1">Save 20-40%</h3>
+              <p className="text-sm text-gray-600">vs proxy services</p>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl mb-2">🔍</div>
+              <h3 className="font-bold mb-1">Free Inspection</h3>
+              <p className="text-sm text-gray-600">Quality checked before shipping</p>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl mb-2">📦</div>
+              <h3 className="font-bold mb-1">Ships in 48h</h3>
+              <p className="text-sm text-gray-600">Fast international delivery</p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </main>
   );
