@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 export const metadata = {
+  alternates: { canonical: 'https://www.newjapandeals.com/terms' },
   title: 'Terms and Conditions - New Japan Deals',
   description: 'Terms and Conditions for purchasing from New Japan Deals. Read our policies on shipping, returns, insurance, and more.',
 };

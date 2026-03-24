@@ -19,7 +19,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://newjapandeals.com'),
+  metadataBase: new URL('https://www.newjapandeals.com'),
   title: 'New Japan Deals - Premium Japanese Watches | Direct from Japan',
   description: 'Buy authentic Japanese watches direct from Japan. Seiko, Casio, Citizen, Orient & more. Zero proxy fees, single payment, expert packaging. Save 20-40% vs proxy services.',
   keywords: 'Japanese watches, Seiko, Casio, G-Shock, Orient, Citizen, Japan direct shipping, buy watches from Japan',
@@ -76,8 +76,8 @@ export default function RootLayout({
               "@type": "Organization",
               "name": "New Japan Deals",
               "legalName": "Yamada Trade LLC (合同会社山田トレード)",
-              "url": "https://newjapandeals.com",
-              "logo": "https://newjapandeals.com/og-image.png",
+              "url": "https://www.newjapandeals.com",
+              "logo": "https://www.newjapandeals.com/og-image.png",
               "description": "Authentic Japanese watches shipped directly from Japan. Licensed dealer since 2014.",
               "foundingDate": "2014",
               "address": {
@@ -88,7 +88,7 @@ export default function RootLayout({
               "contactPoint": {
                 "@type": "ContactPoint",
                 "contactType": "customer service",
-                "url": "https://newjapandeals.com/contact"
+                "url": "https://www.newjapandeals.com/contact"
               }
             })
           }}

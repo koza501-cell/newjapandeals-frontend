@@ -33,11 +33,16 @@ const nextConfig = {
   // Redirects for SEO
   async redirects() {
     return [
-      {
-        source: '/home',
-        destination: '/',
-        permanent: true,
-      },
+      { source: '/home', destination: '/', permanent: true },
+      { source: '/shop', destination: '/products', permanent: true },
+      { source: '/shop/', destination: '/products', permanent: true },
+      { source: '/product-category/:slug*', destination: '/products', permanent: true },
+      { source: '/product-tag/:slug*', destination: '/products', permanent: true },
+      { source: '/product-brands/:slug*', destination: '/products', permanent: true },
+      { source: '/new-arrival', destination: '/products', permanent: true },
+      { source: '/new-arrival/', destination: '/products', permanent: true },
+      { source: '/favorite-:slug*', destination: '/products', permanent: true },
+      { source: '/blog/', destination: '/blog', permanent: true },
     ];
   },
 };

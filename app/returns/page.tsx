@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 export const metadata = {
+  alternates: { canonical: 'https://www.newjapandeals.com/returns' },
   title: 'Returns & Refunds Policy - New Japan Deals',
   description: 'Returns and refunds policy for New Japan Deals. All sales are final. Read our policies on cancellations and insurance claims.',
 };
