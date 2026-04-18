@@ -20,12 +20,12 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.newjapandeals.com'),
-  title: 'New Japan Deals - Premium Japanese Watches | Direct from Japan',
-  description: 'Buy authentic Japanese watches direct from Japan. Seiko, Casio, Citizen, Orient & more. Zero proxy fees, single payment, expert packaging. Save 20-40% vs proxy services.',
-  keywords: 'Japanese watches, Seiko, Casio, G-Shock, Orient, Citizen, Japan direct shipping, buy watches from Japan',
+  title: 'New Japan Deals — Buy Authentic Japanese Watches Direct from Japan',
+  description: 'Buy authentic Japanese watches direct from Japan. Seiko, Casio, G-Shock, Citizen, Orient & more. Zero proxy fees, single payment, expert packaging. Save 20–40% vs Buyee, ZenMarket, FromJapan.',
+  keywords: 'Japanese watches, buy watches from Japan, Seiko, Casio, G-Shock, Orient, Citizen, JDM watches, vintage Japanese watches, Japan direct shipping, no proxy fees',
   openGraph: {
-    title: 'New Japan Deals - Premium Japanese Watches',
-    description: 'Authentic Japanese watches shipped directly from Japan. Zero proxy fees.',
+    title: 'New Japan Deals — Buy Authentic Japanese Watches Direct from Japan',
+    description: 'Authentic Japanese watches shipped directly from Japan. Zero proxy fees. Save 20–40% vs Buyee & ZenMarket.',
     type: 'website',
     locale: 'en_US',
     siteName: 'New Japan Deals',
@@ -34,22 +34,32 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'New Japan Deals - Japanese Watches',
+        alt: 'New Japan Deals - Authentic Japanese Watches',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'New Japan Deals - Premium Japanese Watches',
-    description: 'Authentic Japanese watches shipped directly from Japan.',
+    title: 'New Japan Deals — Buy Authentic Japanese Watches Direct from Japan',
+    description: 'Authentic Japanese watches shipped directly from Japan. Zero proxy fees. Save 20–40%.',
     images: ['/og-image.png'],
   },
   alternates: {
-    canonical: '/',
+    canonical: 'https://www.newjapandeals.com',
+    languages: {
+      'en': 'https://www.newjapandeals.com',
+      'x-default': 'https://www.newjapandeals.com',
+    },
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
@@ -77,8 +87,13 @@ export default function RootLayout({
               "name": "New Japan Deals",
               "legalName": "Yamada Trade LLC (合同会社山田トレード)",
               "url": "https://www.newjapandeals.com",
-              "logo": "https://www.newjapandeals.com/og-image.png",
-              "description": "Authentic Japanese watches shipped directly from Japan. Licensed dealer since 2014.",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://www.newjapandeals.com/og-image.png",
+                "width": 1200,
+                "height": 630
+              },
+              "description": "Authentic Japanese watches shipped directly from Japan. Licensed antique dealer (古物商許可 第441200001622号) since 2014. Zero proxy fees.",
               "foundingDate": "2014",
               "address": {
                 "@type": "PostalAddress",
@@ -88,7 +103,30 @@ export default function RootLayout({
               "contactPoint": {
                 "@type": "ContactPoint",
                 "contactType": "customer service",
-                "url": "https://www.newjapandeals.com/contact"
+                "url": "https://www.newjapandeals.com/contact",
+                "availableLanguage": ["English", "Japanese"]
+              },
+              "knowsAbout": ["Japanese watches", "Seiko", "Casio", "G-Shock", "Citizen", "Orient", "vintage watches", "JDM watches"]
+            })
+          }}
+        />
+        {/* WebSite Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "New Japan Deals",
+              "url": "https://www.newjapandeals.com",
+              "description": "Buy authentic Japanese watches direct from Japan. Zero proxy fees.",
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://www.newjapandeals.com/products?q={search_term_string}"
+                },
+                "query-input": "required name=search_term_string"
               }
             })
           }}

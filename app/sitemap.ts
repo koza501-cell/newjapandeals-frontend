@@ -20,9 +20,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/blog`,
+      url: `${baseUrl}/why-us`,
       lastModified: new Date(),
-      changeFrequency: 'weekly',
+      changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
@@ -38,9 +38,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     },
     {
-      url: `${baseUrl}/why-us`,
+      url: `${baseUrl}/blog`,
       lastModified: new Date(),
-      changeFrequency: 'monthly',
+      changeFrequency: 'weekly',
       priority: 0.7,
     },
     {
@@ -48,6 +48,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/shipping-policy`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/returns`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
     },
   ];
 
@@ -58,10 +70,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       next: { revalidate: 3600 },
     });
     const data = await res.json();
-    if (data.success && data.products) {
-      productPages = data.products.map((product: any) => ({
+    const products = data.products || data.data || [];
+    if (data.success && products.length > 0) {
+      productPages = products.map((product: { slug: string; updated_at?: string }) => ({
         url: `${baseUrl}/product/${product.slug}`,
-        lastModified: new Date(),
+        lastModified: product.updated_at ? new Date(product.updated_at) : new Date(),
         changeFrequency: 'weekly' as const,
         priority: 0.8,
       }));
@@ -78,7 +91,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
     const data = await res.json();
     if (data.success && data.posts) {
-      blogPages = data.posts.map((post: any) => ({
+      blogPages = data.posts.map((post: { slug: string; published_at?: string }) => ({
         url: `${baseUrl}/blog/${post.slug}`,
         lastModified: post.published_at ? new Date(post.published_at) : new Date(),
         changeFrequency: 'monthly' as const,
