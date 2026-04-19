@@ -1,10 +1,13 @@
 import type { Metadata } from 'next';
-import { Playfair_Display, Inter } from 'next/font/google';
+import { Playfair_Display, Inter, Source_Sans_3, Noto_Sans_JP } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import TrustRibbon from '@/components/TrustRibbon';
 import { CartProvider } from '@/context/CartContext';
+import { CurrencyProvider } from '@/context/CurrencyContext';
+import { WishlistProvider } from '@/context/WishlistContext';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -15,6 +18,21 @@ const playfair = Playfair_Display({
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
+  display: 'swap',
+});
+
+// Source Sans Pro was renamed to Source Sans 3 on Google Fonts
+const sourceSans = Source_Sans_3({
+  subsets: ['latin'],
+  weight: ['300', '400', '600', '700'],
+  variable: '--font-source-sans',
+  display: 'swap',
+});
+
+const notoSansJP = Noto_Sans_JP({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '700'],
+  variable: '--font-noto-jp',
   display: 'swap',
 });
 
@@ -69,7 +87,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
+    <html lang="en" className={`${playfair.variable} ${inter.variable} ${sourceSans.variable} ${notoSansJP.variable}`}>
       <head>
         {/* Preconnect hints for faster loading */}
         <link rel="preconnect" href="https://api.newjapandeals.com" />
@@ -147,11 +165,16 @@ export default function RootLayout({
           `}
         </Script>
         
-        <CartProvider>
-          <Header />
-          {children}
-          <Footer />
-        </CartProvider>
+        <CurrencyProvider>
+          <WishlistProvider>
+            <CartProvider>
+              <Header />
+              <TrustRibbon />
+              {children}
+              <Footer />
+            </CartProvider>
+          </WishlistProvider>
+        </CurrencyProvider>
       </body>
     </html>
   );

@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/reindex-meili",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/scrape-marketplace-ratings",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

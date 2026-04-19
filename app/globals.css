@@ -1,5 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+Pro:wght@300;400;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
-
+/* Playfair Display and Inter are loaded via next/font in app/layout.tsx (zero render-blocking).
+   Source Sans Pro and Noto Sans JP are loaded here with display=swap so they never block paint.
+   IMPORTANT: Do not add @import url() calls here — they are synchronous and block FCP. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -21,7 +22,7 @@ html {
 }
 
 body {
-  font-family: 'Source Sans Pro', sans-serif;
+  font-family: var(--font-source-sans), 'Source Sans 3', sans-serif;
   color: #1A1A1A;
   background-color: #FFFFFF;
   line-height: 1.6;
@@ -35,7 +36,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .font-japanese {
-  font-family: 'Noto Sans JP', sans-serif;
+  font-family: var(--font-noto-jp), 'Noto Sans JP', sans-serif;
 }
 
 /* Animations */
@@ -157,4 +158,21 @@ input, textarea, select {
 /* Responsive container */
 .container-custom {
   @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Trust ribbon marquee */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.trust-marquee {
+  width: max-content;
+  animation: marquee 35s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trust-marquee {
+    animation: none;
+  }
 }

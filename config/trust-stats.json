@@ -1,0 +1,10 @@
+{
+  "_comment": "Static fallback values. Updated manually or by the nightly scraper. Resolution order: env vars > scraper cache > this file.",
+  "_updated": "2026-04-19",
+  "mercari_rating": "4.9",
+  "mercari_review_count": 1247,
+  "rakuma_rating": "4.8",
+  "rakuma_review_count": 612,
+  "shipped_2025": 438,
+  "countries_shipped": 32
+}
