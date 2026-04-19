@@ -1,7 +1,12 @@
 {
   "_comment": "Static fallback values. Updated manually or by the nightly scraper. Resolution order: env vars > scraper cache > this file.",
-  "_updated": "2026-04-19",
+  "_updated": "2026-04-20",
   "mercari": {
+    "combined": {
+      "rating": 5.0,
+      "reviewCount": 2042,
+      "accountCount": 2
+    },
     "accounts": [
       {
         "name": "yamada_shop",
@@ -19,8 +24,10 @@
   },
   "level": {
     "seller": 10,
-    "account": "有くん ショップ"
+    "account": "有くん ショップ",
+    "url": "https://jp.mercari.com/user/profile/238989929"
   },
   "shipped2025": 100,
-  "countries": 15
+  "countries": 15,
+  "updatedAt": "2026-04-20T00:00:00.000Z"
 }

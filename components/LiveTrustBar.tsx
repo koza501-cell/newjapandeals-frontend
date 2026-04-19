@@ -83,7 +83,10 @@ function AnimatedNumber({ value, decimals, reduced }: { value: number; decimals:
 // ── Card 1 — Mercari (with popover) ──────────────────────────────────────────
 
 function MercariCard({ stats, reduced }: { stats: TrustStats; reduced: boolean }) {
-  const { combined, accounts } = stats.mercari;
+  const combined = stats?.mercari?.combined ?? { rating: 0, reviewCount: 0, accountCount: 0 };
+  const accounts = stats?.mercari?.accounts ?? [];
+
+  if (!combined.reviewCount) return <SkeletonCard />;
 
   return (
     <Popover.Root>
@@ -145,7 +148,8 @@ function MercariCard({ stats, reduced }: { stats: TrustStats; reduced: boolean }
 // ── Card 2 — Level badge ──────────────────────────────────────────────────────
 
 function LevelCard({ stats, reduced }: { stats: TrustStats; reduced: boolean }) {
-  const { seller, url } = stats.level;
+  const seller = stats?.level?.seller ?? 0;
+  const url    = stats?.level?.url    ?? 'https://jp.mercari.com';
   const isLevel = seller > 0;
 
   if (isLevel) {
@@ -203,6 +207,7 @@ interface SimplCardProps {
 }
 
 function SimpleCard({ stat, icon, iconLabel, value, label, subtext, href, reduced }: SimplCardProps) {
+  if (!value) return <SkeletonCard />;
   return (
     <a
       href={href}
@@ -217,6 +222,19 @@ function SimpleCard({ stat, icon, iconLabel, value, label, subtext, href, reduce
       )}
       <div className="text-[11px] uppercase tracking-wider font-semibold text-gray-500">{label}</div>
     </a>
+  );
+}
+
+// ── Inline skeleton card (used when individual card data is missing) ───────────
+
+function SkeletonCard() {
+  return (
+    <div className="bg-white px-4 py-6 flex flex-col items-center gap-2">
+      <div className="w-7 h-7 bg-gray-200 rounded-full animate-pulse" />
+      <div className="w-16 h-8 bg-gray-200 rounded animate-pulse" />
+      <div className="w-28 h-3 bg-gray-200 rounded animate-pulse" />
+      <div className="w-20 h-3 bg-gray-200 rounded animate-pulse" />
+    </div>
   );
 }
 
@@ -270,7 +288,7 @@ export default function LiveTrustBar({ fallbackData }: Props) {
             stat="shipped"
             icon="🚚"
             iconLabel="Delivery truck"
-            value={stats.shipped2025}
+            value={stats?.shipped2025 ?? 0}
             label="Watches Shipped in 2025"
             href="/about"
             reduced={reduced}
@@ -279,7 +297,7 @@ export default function LiveTrustBar({ fallbackData }: Props) {
             stat="countries"
             icon="🌍"
             iconLabel="Globe"
-            value={stats.countries}
+            value={stats?.countries ?? 0}
             label="Countries Shipped To"
             href="/shipping-policy"
             reduced={reduced}

@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import type { MercariAccount, TrustStats } from './types';
 import { getScraperCache, CACHE_TTL_MS } from './scraper-cache';
+import { TrustStatsDataSchema } from './schema';
 
 export type { TrustStats } from './types';
 
@@ -22,6 +23,14 @@ function weightedRating(accounts: MercariAccount[]): number {
 
 function levelUrl(accounts: MercariAccount[], levelAccount: string): string {
   return accounts.find(a => a.name === levelAccount)?.url ?? accounts[0]?.url ?? 'https://jp.mercari.com';
+}
+
+function validateOrWarn(data: unknown, label: string): ReturnType<typeof TrustStatsDataSchema.safeParse> {
+  const result = TrustStatsDataSchema.safeParse(data);
+  if (!result.success) {
+    console.warn(`[trust-stats] Schema validation failed (${label}):`, JSON.stringify(result.error.flatten()));
+  }
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -65,17 +74,25 @@ function readFallback(): Omit<TrustStats, 'source' | 'cached_at'> {
 
   const levelAccName = parsed.level?.account ?? HARDCODED_FALLBACK.level.account;
 
-  return {
+  const result = {
     mercari: { combined, accounts },
     level: {
       seller:  Number(parsed.level?.seller  ?? HARDCODED_FALLBACK.level.seller),
       account: levelAccName,
-      url:     levelUrl(accounts, levelAccName),
+      url:     parsed.level?.url ?? levelUrl(accounts, levelAccName),
     },
     shipped2025: Number(parsed.shipped2025 ?? HARDCODED_FALLBACK.shipped2025),
     countries:   Number(parsed.countries   ?? HARDCODED_FALLBACK.countries),
     updatedAt:   parsed.updatedAt ?? new Date().toISOString(),
   };
+
+  const validation = validateOrWarn(result, 'json-fallback');
+  if (!validation.success) {
+    console.warn('[trust-stats] JSON fallback failed validation — using hardcoded fallback');
+    return HARDCODED_FALLBACK;
+  }
+
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -114,7 +131,7 @@ function buildFromEnv(): Omit<TrustStats, 'source' | 'cached_at'> | null {
     { name: m2Name!, rating: parseFloat(m2Rat!), reviewCount: Number(m2Count), url: m2Url! },
   ];
 
-  return {
+  const result = {
     mercari: {
       combined: {
         rating:       weightedRating(accounts),
@@ -132,6 +149,14 @@ function buildFromEnv(): Omit<TrustStats, 'source' | 'cached_at'> | null {
     countries:   Number(countries),
     updatedAt:   new Date().toISOString(),
   };
+
+  const validation = validateOrWarn(result, 'env-vars');
+  if (!validation.success) {
+    console.warn('[trust-stats] Env-var build failed validation — falling through to cache/fallback');
+    return null;
+  }
+
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -146,7 +171,11 @@ function buildStats(): TrustStats {
   // 2 — scraper cache (populated by nightly cron)
   const cached = getScraperCache();
   if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
-    return { ...cached.data, source: 'cache', cached_at: new Date(cached.cachedAt).toISOString() };
+    const validation = validateOrWarn(cached.data, 'scraper-cache');
+    if (validation.success) {
+      return { ...cached.data, source: 'cache', cached_at: new Date(cached.cachedAt).toISOString() };
+    }
+    console.warn('[trust-stats] Scraper cache failed validation — falling through to fallback');
   }
 
   // 3 — static fallback JSON — never show zeros
