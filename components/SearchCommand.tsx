@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Meilisearch } from 'meilisearch';
 
 interface SearchProduct {
   id: number;
@@ -36,10 +35,6 @@ const PHP_API = 'https://api.newjapandeals.com';
 const MEILI_HOST = process.env.NEXT_PUBLIC_MEILISEARCH_HOST;
 const MEILI_KEY  = process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY;
 const useMeili   = !!(MEILI_HOST && MEILI_KEY);
-
-const meiliClient = useMeili
-  ? new Meilisearch({ host: MEILI_HOST!, apiKey: MEILI_KEY! })
-  : null;
 
 interface Props {
   onClose?:    () => void;
@@ -90,19 +85,41 @@ export default function SearchCommand({ onClose, autoFocus, className }: Props) 
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  // ── Meilisearch path ────────────────────────────────────────────────────────
+  // ── Meilisearch path (raw fetch — avoids SDK URL-construction issues with sub-path hosts) ──
   const searchMeili = useCallback(async (q: string) => {
-    if (!meiliClient) return false;
+    if (!useMeili) return false;
+    const headers: HeadersInit = {
+      'Content-Type':  'application/json',
+      'Authorization': `Bearer ${MEILI_KEY}`,
+    };
     const [productRes, blogRes] = await Promise.allSettled([
-      meiliClient.index('products').search<SearchProduct>(q, {
-        limit: 6,
-        filter: 'in_stock = true',
+      fetch(`${MEILI_HOST}/indexes/products/search`, {
+        method:  'POST',
+        headers,
+        body:    JSON.stringify({ q, limit: 6, filter: 'in_stock = true' }),
+        signal:  AbortSignal.timeout(5000),
       }),
-      meiliClient.index('blog').search<SearchBlogPost>(q, { limit: 3 }),
+      fetch(`${MEILI_HOST}/indexes/blog/search`, {
+        method:  'POST',
+        headers,
+        body:    JSON.stringify({ q, limit: 3 }),
+        signal:  AbortSignal.timeout(5000),
+      }),
     ]);
 
-    const prods = productRes.status === 'fulfilled' ? productRes.value.hits : [];
-    const blg   = blogRes.status    === 'fulfilled' ? blogRes.value.hits    : [];
+    let prods: SearchProduct[] = [];
+    let blg:   SearchBlogPost[] = [];
+
+    if (productRes.status === 'fulfilled' && productRes.value.ok) {
+      const data = await productRes.value.json();
+      prods = data.hits ?? [];
+    } else if (productRes.status === 'rejected') {
+      console.error('[SearchCommand] Meilisearch products fetch failed:', productRes.reason);
+    }
+    if (blogRes.status === 'fulfilled' && blogRes.value.ok) {
+      const data = await blogRes.value.json();
+      blg = data.hits ?? [];
+    }
 
     setProducts(prods);
     setPosts(blg);
