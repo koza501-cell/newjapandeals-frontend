@@ -7,6 +7,12 @@ export const maxDuration = 60;
 
 const API_URL = 'https://api.newjapandeals.com';
 
+async function ensureMeilisearchRunning(): Promise<void> {
+  try {
+    await fetch(`${API_URL}/api/meili-keepalive.php`, { signal: AbortSignal.timeout(10000) });
+  } catch { /* non-fatal — Meilisearch may already be up */ }
+}
+
 function getClient(): Meilisearch {
   const host   = process.env.MEILISEARCH_HOST;
   const apiKey = process.env.MEILISEARCH_ADMIN_KEY;
@@ -97,6 +103,8 @@ export async function GET(req: NextRequest) {
   if (!verifyCronSecret(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  await ensureMeilisearchRunning();
 
   let client: Meilisearch;
   try {
