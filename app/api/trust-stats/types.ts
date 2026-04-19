@@ -1,12 +1,27 @@
+export interface MercariAccount {
+  name:        string;
+  rating:      number;
+  reviewCount: number;
+  url:         string;
+}
+
 export interface TrustStats {
-  mercari_rating:       string;
-  mercari_review_count: number;
-  mercari_url:          string;
-  rakuma_rating:        string;
-  rakuma_review_count:  number;
-  rakuma_url:           string;
-  shipped_2025:         number;
-  countries_shipped:    number;
-  source:               'env' | 'cache' | 'fallback';
-  cached_at?:           string;
+  mercari: {
+    combined: {
+      rating:       number;   // weighted average, 1 decimal
+      reviewCount:  number;   // sum of all accounts
+      accountCount: number;
+    };
+    accounts: MercariAccount[];
+  };
+  level: {
+    seller:  number; // 1–10; 0 = opt-out → show identity-verified fallback
+    account: string; // name of the account that holds the level badge
+    url:     string; // profile URL of that account
+  };
+  shipped2025: number;
+  countries:   number;
+  updatedAt:   string; // ISO 8601
+  source:      'env' | 'cache' | 'fallback';
+  cached_at?:  string;
 }

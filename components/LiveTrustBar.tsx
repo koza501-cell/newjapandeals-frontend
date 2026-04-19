@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import CountUp from 'react-countup';
 import useSWR from 'swr';
+import * as Popover from '@radix-ui/react-popover';
 import type { TrustStats } from '@/app/api/trust-stats/route';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -11,24 +12,25 @@ interface Props {
   fallbackData?: TrustStats;
 }
 
-// ── Fallback URLs (overridden by API response via NJD_MERCARI_URL / NJD_RAKUMA_URL env vars) ──
+// ── Analytics ────────────────────────────────────────────────────────────────
 
-const MERCARI_URL_FALLBACK = 'https://jp.mercari.com';
-const RAKUMA_URL_FALLBACK  = 'https://rakuma.rakuten.co.jp';
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-const fetcher = (url: string) => fetch(url).then(r => { if (!r.ok) throw new Error('trust-stats fetch failed'); return r.json(); });
-
-function trackClick(stat: string) {
+function trackClick(stat: 'mercari' | 'level' | 'shipped' | 'countries', account?: string) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any;
     if (typeof w.gtag === 'function') {
-      w.gtag('event', 'trust_bar_click', { stat });
+      w.gtag('event', 'trust_bar_click', { stat, ...(account ? { account } : {}) });
     }
   } catch { /* analytics must never throw */ }
 }
+
+// ── Fetcher ───────────────────────────────────────────────────────────────────
+
+const fetcher = (url: string) =>
+  fetch(url).then(r => {
+    if (!r.ok) throw new Error('trust-stats fetch failed');
+    return r.json();
+  });
 
 // ── Skeleton ─────────────────────────────────────────────────────────────────
 
@@ -38,7 +40,7 @@ function SkeletonBar() {
       <div className="max-w-5xl mx-auto px-4">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-gray-200 rounded-2xl overflow-hidden shadow-sm">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white p-6 flex flex-col items-center gap-2">
+            <div key={i} className="bg-white px-4 py-6 flex flex-col items-center gap-2">
               <div className="w-7 h-7 bg-gray-200 rounded-full animate-pulse" />
               <div className="w-16 h-8 bg-gray-200 rounded animate-pulse" />
               <div className="w-28 h-3 bg-gray-200 rounded animate-pulse" />
@@ -51,76 +53,174 @@ function SkeletonBar() {
   );
 }
 
-// ── Card ─────────────────────────────────────────────────────────────────────
+// ── Shared card shell ─────────────────────────────────────────────────────────
 
-interface CardProps {
-  stat:       string;
-  icon:       string;
-  iconLabel:  string;
-  value:      number;
-  decimals:   number;
-  subtext?:   string;
-  label:      string;
-  href:       string;
-  external?:  boolean;
-  reduced:    boolean;
+const cardClass =
+  'flex flex-col items-center text-center bg-white px-4 py-6 hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B50012] focus-visible:ring-inset w-full';
+
+// ── Animated number ───────────────────────────────────────────────────────────
+
+function AnimatedNumber({ value, decimals, reduced }: { value: number; decimals: number; reduced: boolean }) {
+  return (
+    <div className="text-3xl sm:text-4xl font-bold text-[#1A1A1A] leading-none mb-1 tabular-nums" aria-hidden="true">
+      {reduced ? (
+        decimals > 0 ? value.toFixed(decimals) : value.toLocaleString()
+      ) : (
+        <CountUp
+          end={value}
+          decimals={decimals}
+          duration={1.5}
+          separator=","
+          enableScrollSpy
+          scrollSpyDelay={0}
+          scrollSpyOnce
+        />
+      )}
+    </div>
+  );
 }
 
-function StatCard({ stat, icon, iconLabel, value, decimals, subtext, label, href, external, reduced }: CardProps) {
+// ── Card 1 — Mercari (with popover) ──────────────────────────────────────────
+
+function MercariCard({ stats, reduced }: { stats: TrustStats; reduced: boolean }) {
+  const { combined, accounts } = stats.mercari;
+
+  return (
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <button
+          className={cardClass}
+          onClick={() => trackClick('mercari')}
+          aria-label={`Mercari Japan — ${combined.rating} stars across ${combined.reviewCount.toLocaleString()} reviews — click for account details`}
+        >
+          <span className="text-2xl mb-2 leading-none" role="img" aria-label="Star rating">⭐</span>
+          <AnimatedNumber value={combined.rating} decimals={1} reduced={reduced} />
+          <div className="text-xs text-gray-400 mb-1.5" aria-hidden="true">
+            {combined.reviewCount.toLocaleString()} reviews
+          </div>
+          <div className="text-[11px] uppercase tracking-wider font-semibold text-gray-500">
+            Mercari Japan
+          </div>
+          <div className="text-[10px] text-gray-400 mt-0.5">across 2 verified seller accounts</div>
+        </button>
+      </Popover.Trigger>
+
+      <Popover.Portal>
+        <Popover.Content
+          className="z-50 w-80 rounded-xl bg-white shadow-xl border border-gray-100 p-4 text-sm"
+          sideOffset={8}
+          align="center"
+        >
+          <Popover.Arrow className="fill-white" />
+
+          <p className="text-gray-600 text-xs leading-relaxed mb-3">
+            We operate two verified Mercari seller accounts. Both are owned by Yamada Trade LLC
+            (合同会社山田トレード). Click an account to view its public Mercari profile and reviews.
+          </p>
+
+          <div className="space-y-2">
+            {accounts.map(acc => (
+              <a
+                key={acc.name}
+                href={acc.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackClick('mercari', acc.name)}
+                className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2 hover:bg-gray-50 transition-colors"
+                aria-label={`${acc.name} — ${acc.rating} stars, ${acc.reviewCount.toLocaleString()} reviews`}
+              >
+                <span className="font-medium text-[#1A1A1A] truncate max-w-[140px]">{acc.name}</span>
+                <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                  ★ {acc.rating.toFixed(1)} · {acc.reviewCount.toLocaleString()} reviews ↗
+                </span>
+              </a>
+            ))}
+          </div>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
+
+// ── Card 2 — Level badge ──────────────────────────────────────────────────────
+
+function LevelCard({ stats, reduced }: { stats: TrustStats; reduced: boolean }) {
+  const { seller, url } = stats.level;
+  const isLevel = seller > 0;
+
+  if (isLevel) {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => trackClick('level')}
+        className={cardClass}
+        aria-label={`Level ${seller} Seller on Mercari — Top 1%`}
+      >
+        <span className="text-2xl mb-2 leading-none" role="img" aria-label="Trophy">🏆</span>
+        <AnimatedNumber value={seller} decimals={0} reduced={reduced} />
+        <div className="text-xs text-gray-400 mb-1.5" aria-hidden="true">Top 1% on Mercari</div>
+        <div className="text-[11px] uppercase tracking-wider font-semibold text-gray-500">
+          Level {seller} Seller
+        </div>
+        <div className="text-[10px] text-gray-400 mt-0.5">Mercari's top seller tier</div>
+      </a>
+    );
+  }
+
+  // Opt-out fallback: identity-verified badge
   return (
     <a
-      href={href}
-      target={external ? '_blank' : undefined}
-      rel={external ? 'noopener noreferrer' : undefined}
-      onClick={() => trackClick(stat)}
-      className="flex flex-col items-center text-center bg-white px-4 py-6 hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B50012] focus-visible:ring-inset"
-      aria-label={`${label}${subtext ? ` — ${subtext}` : ''}`}
+      href={url || 'https://jp.mercari.com'}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => trackClick('level')}
+      className={cardClass}
+      aria-label="Identity Verified Seller on Mercari"
     >
-      {/* Icon */}
-      <span
-        className="text-2xl mb-2 leading-none"
-        role="img"
-        aria-label={iconLabel}
-      >
-        {icon}
-      </span>
-
-      {/* Big animated number */}
-      <div
-        className="text-3xl sm:text-4xl font-bold text-[#1A1A1A] leading-none mb-1 tabular-nums"
-        aria-hidden="true"
-      >
-        {reduced ? (
-          decimals > 0 ? value.toFixed(decimals) : value.toLocaleString()
-        ) : (
-          <CountUp
-            end={value}
-            decimals={decimals}
-            duration={1.5}
-            separator=","
-            enableScrollSpy
-            scrollSpyDelay={0}
-            scrollSpyOnce
-          />
-        )}
-      </div>
-
-      {/* Sub-text (e.g. review count) */}
-      {subtext && (
-        <div className="text-xs text-gray-400 mb-1.5" aria-hidden="true">
-          {subtext}
-        </div>
-      )}
-
-      {/* Label */}
+      <span className="text-2xl mb-2 leading-none" role="img" aria-label="Verified badge">✅</span>
+      <div className="text-xl font-bold text-[#1A1A1A] leading-none mb-1">本人確認済</div>
+      <div className="text-xs text-gray-400 mb-1.5" aria-hidden="true">Identity Verified</div>
       <div className="text-[11px] uppercase tracking-wider font-semibold text-gray-500">
-        {label}
+        Verified Seller
       </div>
     </a>
   );
 }
 
-// ── Main component ───────────────────────────────────────────────────────────
+// ── Cards 3 & 4 — simple link cards ──────────────────────────────────────────
+
+interface SimplCardProps {
+  stat:      'shipped' | 'countries';
+  icon:      string;
+  iconLabel: string;
+  value:     number;
+  label:     string;
+  subtext?:  string;
+  href:      string;
+  reduced:   boolean;
+}
+
+function SimpleCard({ stat, icon, iconLabel, value, label, subtext, href, reduced }: SimplCardProps) {
+  return (
+    <a
+      href={href}
+      onClick={() => trackClick(stat)}
+      className={cardClass}
+      aria-label={`${label}${subtext ? ` — ${subtext}` : ''}`}
+    >
+      <span className="text-2xl mb-2 leading-none" role="img" aria-label={iconLabel}>{icon}</span>
+      <AnimatedNumber value={value} decimals={0} reduced={reduced} />
+      {subtext && (
+        <div className="text-xs text-gray-400 mb-1.5" aria-hidden="true">{subtext}</div>
+      )}
+      <div className="text-[11px] uppercase tracking-wider font-semibold text-gray-500">{label}</div>
+    </a>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export default function LiveTrustBar({ fallbackData }: Props) {
   const { data, isLoading } = useSWR<TrustStats>(
@@ -140,60 +240,9 @@ export default function LiveTrustBar({ fallbackData }: Props) {
     setReduced(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   }, []);
 
-  // Show skeleton when loading and no fallback data available
   if (isLoading && !fallbackData) return <SkeletonBar />;
-
   const stats = data ?? fallbackData;
   if (!stats) return <SkeletonBar />;
-
-  const cards: CardProps[] = [
-    {
-      stat:      'mercari',
-      icon:      '⭐',
-      iconLabel: 'Star rating',
-      value:     parseFloat(stats.mercari_rating),
-      decimals:  1,
-      subtext:   `${stats.mercari_review_count.toLocaleString()} reviews`,
-      label:     'Mercari Japan',
-      href:      stats.mercari_url ?? MERCARI_URL_FALLBACK,
-      external:  true,
-      reduced,
-    },
-    {
-      stat:      'rakuma',
-      icon:      '⭐',
-      iconLabel: 'Star rating',
-      value:     parseFloat(stats.rakuma_rating),
-      decimals:  1,
-      subtext:   `${stats.rakuma_review_count.toLocaleString()} reviews`,
-      label:     'Rakuma',
-      href:      stats.rakuma_url ?? RAKUMA_URL_FALLBACK,
-      external:  true,
-      reduced,
-    },
-    {
-      stat:      'shipped',
-      icon:      '🚚',
-      iconLabel: 'Delivery truck',
-      value:     stats.shipped_2025,
-      decimals:  0,
-      label:     'Watches Shipped in 2025',
-      href:      '/about',
-      external:  false,
-      reduced,
-    },
-    {
-      stat:      'countries',
-      icon:      '🌍',
-      iconLabel: 'Globe',
-      value:     stats.countries_shipped,
-      decimals:  0,
-      label:     'Countries Shipped To',
-      href:      '/shipping-policy',
-      external:  false,
-      reduced,
-    },
-  ];
 
   return (
     <section
@@ -204,20 +253,37 @@ export default function LiveTrustBar({ fallbackData }: Props) {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage:    'url(/patterns/asanoha.svg)',
-          backgroundSize:     '60px 60px',
-          backgroundRepeat:   'repeat',
-          opacity:            0.035,
+          backgroundImage:  'url(/patterns/asanoha.svg)',
+          backgroundSize:   '60px 60px',
+          backgroundRepeat: 'repeat',
+          opacity:          0.035,
         }}
         aria-hidden="true"
       />
 
       <div className="relative max-w-5xl mx-auto px-4">
-        {/* Divider grid: gap-px on bg-gray-200 creates 1px dividers */}
+        {/* gap-px on bg-gray-200 creates 1px dividers between cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-gray-200 rounded-2xl overflow-hidden shadow-sm">
-          {cards.map(card => (
-            <StatCard key={card.stat} {...card} />
-          ))}
+          <MercariCard stats={stats} reduced={reduced} />
+          <LevelCard   stats={stats} reduced={reduced} />
+          <SimpleCard
+            stat="shipped"
+            icon="🚚"
+            iconLabel="Delivery truck"
+            value={stats.shipped2025}
+            label="Watches Shipped in 2025"
+            href="/about"
+            reduced={reduced}
+          />
+          <SimpleCard
+            stat="countries"
+            icon="🌍"
+            iconLabel="Globe"
+            value={stats.countries}
+            label="Countries Shipped To"
+            href="/shipping-policy"
+            reduced={reduced}
+          />
         </div>
       </div>
     </section>

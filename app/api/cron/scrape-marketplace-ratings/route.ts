@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { setScraperCache } from '@/app/api/trust-stats/scraper-cache';
+import type { MercariAccount } from '@/app/api/trust-stats/types';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * Nightly scraper for Mercari JP and Rakuma seller ratings.
+ * Nightly scraper for both Mercari JP seller accounts.
  *
- * Both platforms aggressively block scrapers. Every fetch is wrapped in try/catch.
+ * Mercari aggressively blocks scrapers. Every fetch is wrapped in try/catch.
  * If a scrape fails we SILENTLY fall through — never zero out a displayed stat.
  *
  * Triggered by Vercel Cron (see vercel.json) or manually:
@@ -23,22 +24,21 @@ function verifyCronSecret(req: NextRequest): boolean {
 // ---------------------------------------------------------------------------
 // Mercari JP — public seller profile page
 // ---------------------------------------------------------------------------
-async function scrapeMercari(): Promise<{ rating: string; count: number } | null> {
-  // Mercari seller ID for New Japan Deals (yamada-trade)
-  const SELLER_ID = process.env.NJD_MERCARI_SELLER_ID;
-  if (!SELLER_ID) return null;
 
+interface ScrapedAccount {
+  rating: number;
+  reviewCount: number;
+}
+
+async function scrapeMercariProfile(profileUrl: string): Promise<ScrapedAccount | null> {
   try {
-    const res = await fetch(
-      `https://jp.mercari.com/user/profile/${SELLER_ID}`,
-      {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; NewJapanDeals-bot/1.0)',
-          'Accept-Language': 'ja-JP,ja;q=0.9',
-        },
-        signal: AbortSignal.timeout(8000),
-      }
-    );
+    const res = await fetch(profileUrl, {
+      headers: {
+        'User-Agent':      'Mozilla/5.0 (compatible; NewJapanDeals-bot/1.0)',
+        'Accept-Language': 'ja-JP,ja;q=0.9',
+      },
+      signal: AbortSignal.timeout(8000),
+    });
     if (!res.ok) return null;
 
     const html = await res.text();
@@ -52,50 +52,12 @@ async function scrapeMercari(): Promise<{ rating: string; count: number } | null
 
     if (!ratingMatch) return null;
 
-    const rating = ratingMatch[1];
-    const count  = countMatch ? parseInt(countMatch[1].replace(/,/g, ''), 10) : 0;
-
-    return { rating, count };
+    return {
+      rating:      parseFloat(ratingMatch[1]),
+      reviewCount: countMatch ? parseInt(countMatch[1].replace(/,/g, ''), 10) : 0,
+    };
   } catch (err) {
-    console.error('[scrape-marketplace-ratings] Mercari scrape failed:', err);
-    return null;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Rakuma — public seller profile page
-// ---------------------------------------------------------------------------
-async function scrapeRakuma(): Promise<{ rating: string; count: number } | null> {
-  const SELLER_ID = process.env.NJD_RAKUMA_SELLER_ID;
-  if (!SELLER_ID) return null;
-
-  try {
-    const res = await fetch(
-      `https://rakuma.rakuten.co.jp/user/${SELLER_ID}`,
-      {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; NewJapanDeals-bot/1.0)',
-          'Accept-Language': 'ja-JP,ja;q=0.9',
-        },
-        signal: AbortSignal.timeout(8000),
-      }
-    );
-    if (!res.ok) return null;
-
-    const html = await res.text();
-
-    const ratingMatch = html.match(/class="[^"]*evaluation[^"]*"[^>]*>\s*([\d.]+)/i)
-      ?? html.match(/"rating"\s*:\s*"?([\d.]+)"?/);
-    const countMatch  = html.match(/([\d,]+)\s*評価/);
-
-    if (!ratingMatch) return null;
-
-    const rating = ratingMatch[1];
-    const count  = countMatch ? parseInt(countMatch[1].replace(/,/g, ''), 10) : 0;
-
-    return { rating, count };
-  } catch (err) {
-    console.error('[scrape-marketplace-ratings] Rakuma scrape failed:', err);
+    console.error('[scrape-marketplace-ratings] Mercari profile scrape failed:', profileUrl, err);
     return null;
   }
 }
@@ -103,17 +65,17 @@ async function scrapeRakuma(): Promise<{ rating: string; count: number } | null>
 // ---------------------------------------------------------------------------
 // NJD backend — total shipped orders
 // ---------------------------------------------------------------------------
-async function fetchShippedCount(): Promise<{ shipped_2025: number; countries_shipped: number } | null> {
+
+async function fetchShippedCount(): Promise<{ shipped2025: number; countries: number } | null> {
   try {
-    const res = await fetch(
-      'https://api.newjapandeals.com/api/stats.php',
-      { signal: AbortSignal.timeout(5000) }
-    );
+    const res = await fetch('https://api.newjapandeals.com/api/stats.php', {
+      signal: AbortSignal.timeout(5000),
+    });
     if (!res.ok) return null;
     const data = await res.json();
     return {
-      shipped_2025:      Number(data.shipped_2025      ?? 0) || 0,
-      countries_shipped: Number(data.countries_shipped ?? 0) || 0,
+      shipped2025: Number(data.shipped_2025      ?? 0) || 0,
+      countries:   Number(data.countries_shipped ?? 0) || 0,
     };
   } catch (err) {
     console.error('[scrape-marketplace-ratings] NJD stats fetch failed:', err);
@@ -124,46 +86,87 @@ async function fetchShippedCount(): Promise<{ shipped_2025: number; countries_sh
 // ---------------------------------------------------------------------------
 // Handler
 // ---------------------------------------------------------------------------
+
 export async function GET(req: NextRequest) {
   if (!verifyCronSecret(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const [mercari, rakuma, shipped] = await Promise.all([
-    scrapeMercari(),
-    scrapeRakuma(),
-    fetchShippedCount(),
-  ]);
+  // Read account config from env vars
+  const accountConfig = [
+    {
+      name: process.env.NJD_MERCARI_1_NAME ?? 'yamada_shop',
+      url:  process.env.NJD_MERCARI_1_URL  ?? '',
+      ratingFallback:      5.0,
+      reviewCountFallback: 327,
+    },
+    {
+      name: process.env.NJD_MERCARI_2_NAME ?? '有くん ショップ',
+      url:  process.env.NJD_MERCARI_2_URL  ?? '',
+      ratingFallback:      5.0,
+      reviewCountFallback: 1715,
+    },
+  ];
 
-  // Merge scraped data with whatever the current cache/fallback holds.
-  // Only override a stat if we actually got a fresh value — never zero out.
+  // Read fallback JSON for "never zero out" guarantee
   const { default: fs }   = await import('fs');
   const { default: path } = await import('path');
 
-  let fallback = {
-    mercari_rating:       '4.9',
-    mercari_review_count: 1247,
-    rakuma_rating:        '4.8',
-    rakuma_review_count:  612,
-    shipped_2025:         438,
-    countries_shipped:    32,
+  let jsonFallback: { accounts: { rating: number; reviewCount: number }[]; shipped2025: number; countries: number } = {
+    accounts:    [{ rating: 5.0, reviewCount: 327 }, { rating: 5.0, reviewCount: 1715 }],
+    shipped2025: 100,
+    countries:   15,
   };
 
   try {
-    const raw  = fs.readFileSync(path.join(process.cwd(), 'config', 'trust-stats.json'), 'utf-8');
+    const raw    = fs.readFileSync(path.join(process.cwd(), 'config', 'trust-stats.json'), 'utf-8');
     const parsed = JSON.parse(raw);
-    fallback = { ...fallback, ...parsed };
+    if (Array.isArray(parsed.mercari?.accounts)) {
+      jsonFallback.accounts = parsed.mercari.accounts;
+    }
+    if (parsed.shipped2025) jsonFallback.shipped2025 = Number(parsed.shipped2025);
+    if (parsed.countries)   jsonFallback.countries   = Number(parsed.countries);
   } catch { /* use hardcoded fallback */ }
 
+  // Scrape both accounts + shipped count in parallel
+  const [scraped1, scraped2, shipped] = await Promise.all([
+    accountConfig[0].url ? scrapeMercariProfile(accountConfig[0].url) : Promise.resolve(null),
+    accountConfig[1].url ? scrapeMercariProfile(accountConfig[1].url) : Promise.resolve(null),
+    fetchShippedCount(),
+  ]);
+
+  const accounts: MercariAccount[] = accountConfig.map((cfg, i) => {
+    const scraped = i === 0 ? scraped1 : scraped2;
+    return {
+      name:        cfg.name,
+      rating:      (scraped?.rating      && scraped.rating      > 0) ? scraped.rating      : (jsonFallback.accounts[i]?.rating      ?? cfg.ratingFallback),
+      reviewCount: (scraped?.reviewCount && scraped.reviewCount > 0) ? scraped.reviewCount : (jsonFallback.accounts[i]?.reviewCount ?? cfg.reviewCountFallback),
+      url:         cfg.url || `https://jp.mercari.com`,
+    };
+  });
+
+  const totalCount  = accounts.reduce((s, a) => s + a.reviewCount, 0);
+  const combinedRating = totalCount > 0
+    ? Math.round((accounts.reduce((s, a) => s + a.rating * a.reviewCount, 0) / totalCount) * 10) / 10
+    : 0;
+
+  const levelAccount = process.env.NJD_MERCARI_LEVEL_ACCOUNT ?? accounts[1].name;
+  const levelUrl     = accounts.find(a => a.name === levelAccount)?.url ?? accounts[0].url;
+  const sellerLevel  = process.env.NJD_MERCARI_SELLER_LEVEL;
+
   const merged = {
-    mercari_rating:       mercari?.rating ?? String(fallback.mercari_rating),
-    mercari_review_count: (mercari?.count && mercari.count > 0) ? mercari.count : Number(fallback.mercari_review_count),
-    mercari_url:          process.env.NJD_MERCARI_URL ?? 'https://jp.mercari.com',
-    rakuma_rating:        rakuma?.rating  ?? String(fallback.rakuma_rating),
-    rakuma_review_count:  (rakuma?.count  && rakuma.count  > 0) ? rakuma.count  : Number(fallback.rakuma_review_count),
-    rakuma_url:           process.env.NJD_RAKUMA_URL  ?? 'https://rakuma.rakuten.co.jp',
-    shipped_2025:         (shipped?.shipped_2025      && shipped.shipped_2025      > 0) ? shipped.shipped_2025      : Number(fallback.shipped_2025),
-    countries_shipped:    (shipped?.countries_shipped && shipped.countries_shipped > 0) ? shipped.countries_shipped : Number(fallback.countries_shipped),
+    mercari: {
+      combined: { rating: combinedRating, reviewCount: totalCount, accountCount: accounts.length },
+      accounts,
+    },
+    level: {
+      seller:  sellerLevel !== '' && sellerLevel != null ? Number(sellerLevel) : 0,
+      account: levelAccount,
+      url:     levelUrl,
+    },
+    shipped2025: (shipped?.shipped2025 && shipped.shipped2025 > 0) ? shipped.shipped2025 : jsonFallback.shipped2025,
+    countries:   (shipped?.countries   && shipped.countries   > 0) ? shipped.countries   : jsonFallback.countries,
+    updatedAt:   new Date().toISOString(),
   };
 
   setScraperCache(merged);
@@ -171,11 +174,11 @@ export async function GET(req: NextRequest) {
   const result = {
     ...merged,
     scraped: {
-      mercari: !!mercari,
-      rakuma:  !!rakuma,
-      shipped: !!shipped,
+      mercari1: !!scraped1,
+      mercari2: !!scraped2,
+      shipped:  !!shipped,
     },
-    scraped_at: new Date().toISOString(),
+    scraped_at: merged.updatedAt,
   };
 
   console.log('[scrape-marketplace-ratings]', JSON.stringify(result));
