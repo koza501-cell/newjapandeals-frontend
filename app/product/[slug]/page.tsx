@@ -18,8 +18,10 @@ export async function generateMetadata(
     const model = product.model || '';
     const ref = product.reference_number ? ` ${product.reference_number}` : '';
     const movement = product.movement_type || 'mechanical';
-    const rawDesc = `${brand} ${model} - ${movement} watch. Authentic from Japan, no proxy fees, ships worldwide.`;
-    const description = rawDesc.length > 160 ? rawDesc.slice(0, 157) + '...' : rawDesc;
+    const rawDesc =
+      `Buy the ${brand} ${model}${ref} ${movement} watch direct from Japan —` +
+      ' authentic, expert-inspected, zero proxy fees, ships worldwide in 48h from licensed dealer (since 2014).';
+    const description = rawDesc.length > 155 ? rawDesc.slice(0, 152) + '...' : rawDesc;
     const ogImage =
       product.image_1 ||
       product.image ||

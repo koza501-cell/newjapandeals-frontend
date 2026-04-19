@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { sanitizeText } from '@/lib/sanitize';
 
 const API_URL = 'https://api.newjapandeals.com';
 
@@ -97,12 +98,14 @@ export default function ProductPageClient() {
   const isInCart = items.some(item => item.id === product.id);
   const ref = product.reference_number || '';
   const imgAltBase = `${product.brand} ${product.model}${ref ? ' ' + ref : ''}`;
+  const primaryAlt = `${imgAltBase} — New Japan Deals`;
+  const viewAlt = (n: number) => `${imgAltBase} — view ${n} — New Japan Deals`;
 
   const handleAddToCart = () => {
     if (!addToCart) return;
     addToCart({
       id: product.id, slug: product.slug,
-      title: product.title_en || product.title || `${product.brand} ${product.model}`,
+      title: sanitizeText(product.title_en || product.title || `${product.brand} ${product.model}`),
       brand: product.brand, model: product.model, price_jpy: basePrice,
       image: product.image || images[0] || '', condition: product.condition || '',
       shipping_category_id: product.shipping_category_id,
@@ -141,7 +144,7 @@ export default function ProductPageClient() {
             <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-4">
               <div className="aspect-square relative">
                 {currentImage ? (
-                  <img src={currentImage} alt={`${imgAltBase} - image ${selectedImage + 1}`} className="w-full h-full object-contain" />
+                  <img src={currentImage} alt={primaryAlt} className="w-full h-full object-contain" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-100 text-6xl text-gray-300">⌚</div>
                 )}
@@ -154,7 +157,7 @@ export default function ProductPageClient() {
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {images.map((img, idx) => (
                   <button key={idx} onClick={() => setSelectedImage(idx)} className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${selectedImage === idx ? 'border-red-600' : 'border-transparent'}`}>
-                    <img src={img} alt={`${imgAltBase} - image ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img src={img} alt={viewAlt(idx + 1)} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -166,9 +169,9 @@ export default function ProductPageClient() {
             <div>
               <p className="text-red-600 font-medium mb-1">{product.brand}</p>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                {product.title_en || product.title || `${product.brand} ${product.model}`}
+                {sanitizeText(product.title_en || product.title || `${product.brand} ${product.model}`)}
               </h1>
-              {product.title_jp && <p className="text-gray-500 mt-1">{product.title_jp}</p>}
+              {product.title_jp && <p className="text-gray-500 mt-1">{sanitizeText(product.title_jp)}</p>}
               <p className="text-sm text-gray-400 mt-2">SKU: {product.sku}</p>
             </div>
 
@@ -224,14 +227,14 @@ export default function ProductPageClient() {
         {product.description_en && (
           <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
             <h2 className="font-bold text-xl mb-4">Description</h2>
-            <p className="text-gray-700 whitespace-pre-line leading-relaxed">{product.description_en}</p>
+            <p className="text-gray-700 whitespace-pre-line leading-relaxed">{sanitizeText(product.description_en)}</p>
           </div>
         )}
 
         {product.description_jp && (
           <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
             <h2 className="font-bold text-xl mb-4">日本語説明 (Japanese Description)</h2>
-            <p className="text-gray-700 whitespace-pre-line leading-relaxed">{product.description_jp}</p>
+            <p className="text-gray-700 whitespace-pre-line leading-relaxed">{sanitizeText(product.description_jp)}</p>
           </div>
         )}
 
@@ -271,7 +274,9 @@ export default function ProductPageClient() {
                   <Link key={rp.slug} href={`/product/${rp.slug}`} className="bg-white rounded-xl shadow hover:shadow-md transition-shadow overflow-hidden group">
                     <div className="aspect-square bg-gray-100">
                       {rpImage ? (
-                        <img src={rpImage} alt={`${rp.brand} ${rp.model}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <img src={rpImage}
+                          alt={`${rp.brand} ${rp.model}${rp.reference_number ? ' ' + rp.reference_number : ''} — New Japan Deals`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-3xl text-gray-300">⌚</div>
                       )}
