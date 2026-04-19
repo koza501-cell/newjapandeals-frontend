@@ -11,10 +11,10 @@ interface Props {
   fallbackData?: TrustStats;
 }
 
-// ── Constants ────────────────────────────────────────────────────────────────
+// ── Fallback URLs (overridden by API response via NJD_MERCARI_URL / NJD_RAKUMA_URL env vars) ──
 
-const MERCARI_URL = 'https://jp.mercari.com';
-const RAKUMA_URL  = 'https://rakuma.rakuten.co.jp';
+const MERCARI_URL_FALLBACK = 'https://jp.mercari.com';
+const RAKUMA_URL_FALLBACK  = 'https://rakuma.rakuten.co.jp';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -155,7 +155,7 @@ export default function LiveTrustBar({ fallbackData }: Props) {
       decimals:  1,
       subtext:   `${stats.mercari_review_count.toLocaleString()} reviews`,
       label:     'Mercari Japan',
-      href:      MERCARI_URL,
+      href:      stats.mercari_url ?? MERCARI_URL_FALLBACK,
       external:  true,
       reduced,
     },
@@ -167,7 +167,7 @@ export default function LiveTrustBar({ fallbackData }: Props) {
       decimals:  1,
       subtext:   `${stats.rakuma_review_count.toLocaleString()} reviews`,
       label:     'Rakuma',
-      href:      RAKUMA_URL,
+      href:      stats.rakuma_url ?? RAKUMA_URL_FALLBACK,
       external:  true,
       reduced,
     },

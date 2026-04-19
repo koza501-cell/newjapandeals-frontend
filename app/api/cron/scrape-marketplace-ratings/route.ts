@@ -158,8 +158,10 @@ export async function GET(req: NextRequest) {
   const merged = {
     mercari_rating:       mercari?.rating ?? String(fallback.mercari_rating),
     mercari_review_count: (mercari?.count && mercari.count > 0) ? mercari.count : Number(fallback.mercari_review_count),
+    mercari_url:          process.env.NJD_MERCARI_URL ?? 'https://jp.mercari.com',
     rakuma_rating:        rakuma?.rating  ?? String(fallback.rakuma_rating),
     rakuma_review_count:  (rakuma?.count  && rakuma.count  > 0) ? rakuma.count  : Number(fallback.rakuma_review_count),
+    rakuma_url:           process.env.NJD_RAKUMA_URL  ?? 'https://rakuma.rakuten.co.jp',
     shipped_2025:         (shipped?.shipped_2025      && shipped.shipped_2025      > 0) ? shipped.shipped_2025      : Number(fallback.shipped_2025),
     countries_shipped:    (shipped?.countries_shipped && shipped.countries_shipped > 0) ? shipped.countries_shipped : Number(fallback.countries_shipped),
   };

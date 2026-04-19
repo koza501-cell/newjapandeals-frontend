@@ -8,8 +8,10 @@ export const revalidate = 0;
 export interface TrustStats {
   mercari_rating:       string;
   mercari_review_count: number;
+  mercari_url:          string;
   rakuma_rating:        string;
   rakuma_review_count:  number;
+  rakuma_url:           string;
   shipped_2025:         number;
   countries_shipped:    number;
   source:               'env' | 'cache' | 'fallback';
@@ -30,6 +32,13 @@ export function setScraperCache(data: Omit<TrustStats, 'source'>) {
   scraperCachedAt = Date.now();
 }
 
+// URLs are server-side env vars (no NEXT_PUBLIC_ — not exposed in client bundle)
+const MERCARI_URL_DEFAULT = 'https://jp.mercari.com';
+const RAKUMA_URL_DEFAULT  = 'https://rakuma.rakuten.co.jp';
+
+function getMercariUrl() { return process.env.NJD_MERCARI_URL ?? MERCARI_URL_DEFAULT; }
+function getRakumaUrl()  { return process.env.NJD_RAKUMA_URL  ?? RAKUMA_URL_DEFAULT; }
+
 function readFallback(): Omit<TrustStats, 'source'> {
   const filePath = path.join(process.cwd(), 'config', 'trust-stats.json');
   const raw = fs.readFileSync(filePath, 'utf-8');
@@ -37,8 +46,10 @@ function readFallback(): Omit<TrustStats, 'source'> {
   return {
     mercari_rating:       parsed.mercari_rating       ?? '4.9',
     mercari_review_count: Number(parsed.mercari_review_count ?? 1247),
+    mercari_url:          getMercariUrl(),
     rakuma_rating:        parsed.rakuma_rating         ?? '4.8',
     rakuma_review_count:  Number(parsed.rakuma_review_count  ?? 612),
+    rakuma_url:           getRakumaUrl(),
     shipped_2025:         Number(parsed.shipped_2025         ?? 438),
     countries_shipped:    Number(parsed.countries_shipped    ?? 32),
   };
@@ -63,8 +74,10 @@ function buildStats(): TrustStats {
     return {
       mercari_rating:       envMercariRating!,
       mercari_review_count: Number(envMercariCount),
+      mercari_url:          getMercariUrl(),
       rakuma_rating:        envRakumaRating!,
       rakuma_review_count:  Number(envRakumaCount),
+      rakuma_url:           getRakumaUrl(),
       shipped_2025:         Number(envShipped2025),
       countries_shipped:    Number(envCountries),
       source: 'env',
@@ -84,8 +97,10 @@ function buildStats(): TrustStats {
     return {
       mercari_rating:       '4.9',
       mercari_review_count: 1247,
+      mercari_url:          getMercariUrl(),
       rakuma_rating:        '4.8',
       rakuma_review_count:  612,
+      rakuma_url:           getRakumaUrl(),
       shipped_2025:         438,
       countries_shipped:    32,
       source: 'fallback',
