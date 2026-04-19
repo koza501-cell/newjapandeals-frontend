@@ -107,6 +107,8 @@ export default function Hero() {
                     setIsVisible(true);
                   }, 300);
                 }}
+                aria-label={`Go to slide ${index + 1}`}
+                aria-current={index === currentIndex ? 'true' : undefined}
                 className={`w-2 h-2 rounded-full transition-all ${
                   index === currentIndex ? 'bg-[#B50012] w-6' : 'bg-white/30 hover:bg-white/50'
                 }`}

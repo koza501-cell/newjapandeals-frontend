@@ -14,7 +14,9 @@
     "meilisearch": "^0.57.0",
     "next": "14.2.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-countup": "^6.5.3",
+    "react-dom": "^18.2.0",
+    "swr": "^2.4.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",

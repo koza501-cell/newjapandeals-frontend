@@ -31,3 +31,6 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local documentation with credentials (do not commit)
+NJD_AUTOMATION_PROJECT_COMPLETE.md

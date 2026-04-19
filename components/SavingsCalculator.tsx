@@ -62,14 +62,17 @@ export default function SavingsCalculator() {
           <div className="bg-[#1A1A1A] p-6 md:p-8">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Item Price (JPY)</label>
+                <label htmlFor="calc-price" className="block text-gray-400 text-sm mb-2">Item Price (JPY)</label>
                 <input
+                  id="calc-price"
                   type="number"
                   value={price}
                   onChange={(e) => setPrice(Number(e.target.value) || 0)}
                   className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white text-xl font-bold focus:outline-none focus:ring-2 focus:ring-[#B50012]"
                 />
+                <label htmlFor="calc-price-range" className="sr-only">Item Price Slider</label>
                 <input
+                  id="calc-price-range"
                   type="range"
                   min="5000"
                   max="100000"
@@ -80,8 +83,9 @@ export default function SavingsCalculator() {
                 />
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Your Country</label>
+                <label htmlFor="calc-country" className="block text-gray-400 text-sm mb-2">Your Country</label>
                 <select
+                  id="calc-country"
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
                   className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white text-lg focus:outline-none focus:ring-2 focus:ring-[#B50012]"
