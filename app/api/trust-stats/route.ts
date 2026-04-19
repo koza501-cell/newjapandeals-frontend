@@ -1,36 +1,13 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import type { TrustStats } from './types';
+import { getScraperCache, CACHE_TTL_MS } from './scraper-cache';
+
+export type { TrustStats } from './types';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-export interface TrustStats {
-  mercari_rating:       string;
-  mercari_review_count: number;
-  mercari_url:          string;
-  rakuma_rating:        string;
-  rakuma_review_count:  number;
-  rakuma_url:           string;
-  shipped_2025:         number;
-  countries_shipped:    number;
-  source:               'env' | 'cache' | 'fallback';
-  cached_at?:           string;
-}
-
-// Module-level cache — persists within the same Vercel Lambda instance (~15 min warm)
-let scraperCache: Omit<TrustStats, 'source'> | null = null;
-let scraperCachedAt: number = 0;
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
-
-/**
- * Called by /api/cron/scrape-marketplace-ratings to populate the in-memory cache.
- * This function is exported so the cron route can import it directly.
- */
-export function setScraperCache(data: Omit<TrustStats, 'source'>) {
-  scraperCache  = data;
-  scraperCachedAt = Date.now();
-}
 
 // URLs are server-side env vars (no NEXT_PUBLIC_ — not exposed in client bundle)
 const MERCARI_URL_DEFAULT = 'https://jp.mercari.com';
@@ -85,8 +62,9 @@ function buildStats(): TrustStats {
   }
 
   // 2 — scraper cache (populated by nightly cron)
-  if (scraperCache && Date.now() - scraperCachedAt < CACHE_TTL_MS) {
-    return { ...scraperCache, source: 'cache', cached_at: new Date(scraperCachedAt).toISOString() };
+  const cached = getScraperCache();
+  if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
+    return { ...cached.data, source: 'cache', cached_at: new Date(cached.cachedAt).toISOString() };
   }
 
   // 3 — static fallback (config/trust-stats.json) — never show zeros

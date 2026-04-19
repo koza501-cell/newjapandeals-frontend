@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { setScraperCache } from '@/app/api/trust-stats/route';
+import { setScraperCache } from '@/app/api/trust-stats/scraper-cache';
 
 export const dynamic = 'force-dynamic';
 
