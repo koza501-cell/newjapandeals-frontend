@@ -90,6 +90,7 @@ function transformProduct(p: any) {
     gender:           p.gender ?? '',
     availability:     p.availability ?? 'in_stock',
     status:           p.status ?? '',
+    featured:         p.featured ? 1 : 0,
     tags:             Array.isArray(p.tags) ? p.tags : [],
     price_jpy:        Number(p.price_jpy ?? p.price ?? 0),
     price_bucket:     normalisePriceBucket(Number(p.price_jpy ?? p.price ?? 0)),
@@ -166,7 +167,7 @@ export async function GET(req: NextRequest) {
       headers,
       body: JSON.stringify({
         searchableAttributes: ['brand', 'model', 'reference_number', 'title', 'condition', 'tags'],
-        filterableAttributes: ['category', 'brand', 'condition', 'movement_type', 'gender', 'price_jpy', 'availability', 'status', 'in_stock'],
+        filterableAttributes: ['category', 'brand', 'condition', 'movement_type', 'gender', 'price_jpy', 'availability', 'status', 'in_stock', 'featured'],
         sortableAttributes:   ['price_jpy', 'created_at'],
         typoTolerance: {
           enabled: true,

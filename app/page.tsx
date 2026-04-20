@@ -2,6 +2,7 @@ import Hero from '@/components/Hero';
 import TrustBar from '@/components/TrustBar';
 import LiveTrustBar from '@/components/LiveTrustBar';
 import FeaturedWatchesSection from '@/components/FeaturedWatchesSection';
+import NewArrivalsSection from '@/components/NewArrivalsSection';
 import SavingsCalculator from '@/components/SavingsCalculator';
 import WhyNotProxy from '@/components/WhyNotProxy';
 import FeaturedProducts from '@/components/FeaturedProducts';
@@ -52,8 +53,11 @@ export default async function Home() {
       {/* Live Trust Statistics Bar */}
       <LiveTrustBar fallbackData={trustStats} />
 
-      {/* Featured Watches — hand-picked, config-driven */}
+      {/* Featured Watches — DB-driven (featured=1 in products table) */}
       <FeaturedWatchesSection />
+
+      {/* New Arrivals — automatic, 4 most recent non-featured products */}
+      <NewArrivalsSection />
 
       {/* Savings Calculator */}
       <SavingsCalculator />
