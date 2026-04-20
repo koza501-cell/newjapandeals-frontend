@@ -77,13 +77,15 @@ function transformProduct(p: any) {
     brand:            p.brand ?? '',
     model:            p.model ?? '',
     reference_number: p.reference_number ?? p.referenceNumber ?? '',
-    title:            p.title ?? `${p.brand ?? ''} ${p.model ?? ''}`.trim(),
+    title:            p.title ?? p.title_en ?? `${p.brand ?? ''} ${p.model ?? ''}`.trim(),
+    category:         p.category ?? p.category_slug ?? '',
     condition:        p.condition ?? '',
+    movement:         p.movement ?? '',
     tags:             Array.isArray(p.tags) ? p.tags : [],
     price_jpy:        Number(p.price_jpy ?? p.price ?? 0),
     price_bucket:     normalisePriceBucket(Number(p.price_jpy ?? p.price ?? 0)),
     in_stock:         p.status === 'published' && !p.sold,
-    image_1:          p.image_1 ?? p.images?.[0] ?? null,
+    image_1:          p.image_1 ?? p.image ?? p.images?.[0] ?? null,
     created_at:       p.created_at ?? null,
   };
 }
@@ -146,7 +148,7 @@ export async function GET(req: NextRequest) {
       headers,
       body: JSON.stringify({
         searchableAttributes: ['brand', 'model', 'reference_number', 'title', 'condition', 'tags'],
-        filterableAttributes: ['brand', 'condition', 'price_bucket', 'in_stock'],
+        filterableAttributes: ['brand', 'category', 'condition', 'movement', 'price_bucket', 'price_jpy', 'in_stock'],
         sortableAttributes:   ['price_jpy', 'created_at'],
         typoTolerance: {
           enabled: true,
