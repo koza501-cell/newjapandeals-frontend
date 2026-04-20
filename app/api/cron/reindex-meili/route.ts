@@ -1,23 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Meilisearch } from 'meilisearch';
 
 export const dynamic = 'force-dynamic';
-// Vercel max timeout for Pro plan; on Hobby plan set to 10
-export const maxDuration = 60;
+export const maxDuration = 10;
 
-const API_URL = 'https://api.newjapandeals.com';
+const API_URL   = 'https://api.newjapandeals.com';
+const MEILI_HOST = process.env.MEILISEARCH_HOST;
+const MEILI_KEY  = process.env.MEILISEARCH_ADMIN_KEY;
 
 async function ensureMeilisearchRunning(): Promise<void> {
   try {
-    await fetch(`${API_URL}/api/meili-keepalive.php`, { signal: AbortSignal.timeout(10000) });
+    await fetch(`${API_URL}/api/meili-keepalive.php`, { signal: AbortSignal.timeout(8000) });
   } catch { /* non-fatal — Meilisearch may already be up */ }
 }
 
-function getClient(): Meilisearch {
-  const host   = process.env.MEILISEARCH_HOST;
-  const apiKey = process.env.MEILISEARCH_ADMIN_KEY;
-  if (!host || !apiKey) throw new Error('MEILISEARCH_HOST or MEILISEARCH_ADMIN_KEY not configured');
-  return new Meilisearch({ host, apiKey });
+function meiliHeaders(): HeadersInit {
+  return {
+    'Content-Type':  'application/json',
+    'Authorization': `Bearer ${MEILI_KEY}`,
+  };
 }
 
 function verifyCronSecret(req: NextRequest): boolean {
@@ -104,15 +104,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  await ensureMeilisearchRunning();
-
-  let client: Meilisearch;
-  try {
-    client = getClient();
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: msg }, { status: 500 });
+  if (!MEILI_HOST || !MEILI_KEY) {
+    return NextResponse.json({ error: 'MEILISEARCH_HOST or MEILISEARCH_ADMIN_KEY not configured' }, { status: 500 });
   }
+
+  await ensureMeilisearchRunning();
 
   const [rawProducts, rawPosts] = await Promise.all([fetchAllProducts(), fetchAllPosts()]);
 
@@ -121,37 +117,72 @@ export async function GET(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const posts    = (rawPosts    as any[]).map(transformPost);
 
-  // Ensure index settings are correct before adding documents
-  const productsIndex = client.index('products');
-  const blogIndex     = client.index('blog');
+  const headers = meiliHeaders();
 
-  await Promise.all([
-    productsIndex.updateSettings({
-      searchableAttributes: ['brand', 'model', 'reference_number', 'title', 'condition', 'tags'],
-      filterableAttributes: ['brand', 'condition', 'price_bucket', 'in_stock'],
-      sortableAttributes:   ['price_jpy', 'created_at'],
-      typoTolerance: {
-        enabled: true,
-        minWordSizeForTypos: { oneTypo: 4, twoTypos: 8 },
-      },
+  // Update index settings (fire-and-forget — tasks are async on Meilisearch side)
+  await Promise.allSettled([
+    fetch(`${MEILI_HOST}/indexes/products/settings`, {
+      method:  'PATCH',
+      headers,
+      body: JSON.stringify({
+        searchableAttributes: ['brand', 'model', 'reference_number', 'title', 'condition', 'tags'],
+        filterableAttributes: ['brand', 'condition', 'price_bucket', 'in_stock'],
+        sortableAttributes:   ['price_jpy', 'created_at'],
+        typoTolerance: {
+          enabled: true,
+          minWordSizeForTypos: { oneTypo: 4, twoTypos: 8 },
+        },
+      }),
+      signal: AbortSignal.timeout(8000),
     }),
-    blogIndex.updateSettings({
-      searchableAttributes: ['title', 'excerpt', 'tags'],
+    fetch(`${MEILI_HOST}/indexes/blog/settings`, {
+      method:  'PATCH',
+      headers,
+      body: JSON.stringify({
+        searchableAttributes: ['title', 'excerpt', 'tags'],
+      }),
+      signal: AbortSignal.timeout(8000),
     }),
   ]);
 
-  // Full reindex: replace all documents
-  const [pTask, bTask] = await Promise.all([
-    products.length > 0 ? productsIndex.addDocuments(products, { primaryKey: 'id' }) : Promise.resolve(null),
-    posts.length    > 0 ? blogIndex.addDocuments(posts, { primaryKey: 'id' })        : Promise.resolve(null),
+  // Add documents — returns { taskUid } from Meilisearch
+  const [pRes, bRes] = await Promise.allSettled([
+    products.length > 0
+      ? fetch(`${MEILI_HOST}/indexes/products/documents?primaryKey=id`, {
+          method:  'POST',
+          headers,
+          body:    JSON.stringify(products),
+          signal:  AbortSignal.timeout(8000),
+        })
+      : Promise.resolve(null),
+    posts.length > 0
+      ? fetch(`${MEILI_HOST}/indexes/blog/documents?primaryKey=id`, {
+          method:  'POST',
+          headers,
+          body:    JSON.stringify(posts),
+          signal:  AbortSignal.timeout(8000),
+        })
+      : Promise.resolve(null),
   ]);
+
+  let pTaskUid: number | null = null;
+  let bTaskUid: number | null = null;
+
+  if (pRes.status === 'fulfilled' && pRes.value?.ok) {
+    const d = await pRes.value.json();
+    pTaskUid = d.taskUid ?? null;
+  }
+  if (bRes.status === 'fulfilled' && bRes.value?.ok) {
+    const d = await bRes.value.json();
+    bTaskUid = d.taskUid ?? null;
+  }
 
   const result = {
-    products_indexed: products.length,
-    posts_indexed:    posts.length,
-    products_task_uid: pTask?.taskUid ?? null,
-    blog_task_uid:     bTask?.taskUid ?? null,
-    indexed_at: new Date().toISOString(),
+    products_indexed:  products.length,
+    posts_indexed:     posts.length,
+    products_task_uid: pTaskUid,
+    blog_task_uid:     bTaskUid,
+    indexed_at:        new Date().toISOString(),
   };
 
   console.log('[reindex-meili]', JSON.stringify(result));
