@@ -37,8 +37,13 @@ function esc(v: string): string {
   return v.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
+// These statuses are ALWAYS excluded — cannot be overridden by user filters.
+// Belt-and-suspenders: the reindex cron also excludes these from the index,
+// but we enforce it here too so a re-listed item never slips through.
+const BASE_FILTER = 'status NOT IN ["sold_mercari", "sold_website", "archived"] AND availability != "sold"';
+
 function buildFilter(params: URLSearchParams): string {
-  const parts: string[] = ['in_stock = true'];
+  const parts: string[] = [BASE_FILTER];
 
   const category = params.get('category') ?? '';
   if (category) parts.push(`category = '${esc(category)}'`);

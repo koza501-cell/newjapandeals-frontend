@@ -34,7 +34,13 @@ async function fetchAllProducts(): Promise<unknown[]> {
   for (;;) {
     const res = await fetch(
       `${API_URL}/api/products.php?status=published&limit=${pageSize}&page=${page}`,
-      { signal: AbortSignal.timeout(15000) }
+      {
+        signal: AbortSignal.timeout(15000),
+        // Prevent Next.js data cache from serving stale products.
+        // Without this, newly-added products would not appear until the
+        // Next.js cache revalidates (potentially hours later).
+        cache: 'no-store',
+      }
     );
     if (!res.ok) break;
     const data = await res.json();
@@ -138,11 +144,16 @@ export async function GET(req: NextRequest) {
 
   const [rawProducts, rawPosts] = await Promise.all([fetchAllProducts(), fetchAllPosts()]);
 
-  // Only index products that are published AND in stock — sold/reserved items are excluded.
+  // Exclude products that are sold, archived, or explicitly unavailable.
+  // Include if: status is published/active (not a sold/archived status)
+  //             AND availability is not explicitly 'sold'.
+  // Products with no availability field (undefined) are treated as in-stock.
+  const SOLD_STATUSES = new Set(['sold_mercari', 'sold_website', 'archived']);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const products = (rawProducts as any[])
-    .filter((p: any) => p.status === 'published' && (!p.availability || p.availability === 'in_stock'))
+    .filter((p: any) => !SOLD_STATUSES.has(p.status) && p.availability !== 'sold')
     .map(transformProduct);
+  console.log(`[reindex-meili] raw=${rawProducts.length} after_filter=${products.length}`);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const posts    = (rawPosts    as any[]).map(transformPost);
 
