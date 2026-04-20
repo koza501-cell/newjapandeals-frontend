@@ -80,11 +80,15 @@ function transformProduct(p: any) {
     title:            p.title ?? p.title_en ?? `${p.brand ?? ''} ${p.model ?? ''}`.trim(),
     category:         p.category ?? p.category_slug ?? '',
     condition:        p.condition ?? '',
-    movement:         p.movement ?? '',
+    movement_type:    p.movement_type ?? p.movement ?? '',
+    gender:           p.gender ?? '',
+    availability:     p.availability ?? 'in_stock',
+    status:           p.status ?? '',
     tags:             Array.isArray(p.tags) ? p.tags : [],
     price_jpy:        Number(p.price_jpy ?? p.price ?? 0),
     price_bucket:     normalisePriceBucket(Number(p.price_jpy ?? p.price ?? 0)),
-    in_stock:         p.status === 'published' && !p.sold,
+    // All indexed documents are in-stock/published — SearchCommand filter 'in_stock = true' relies on this
+    in_stock:         true,
     image_1:          p.image_1 ?? p.image ?? p.images?.[0] ?? null,
     created_at:       p.created_at ?? null,
   };
@@ -134,8 +138,11 @@ export async function GET(req: NextRequest) {
 
   const [rawProducts, rawPosts] = await Promise.all([fetchAllProducts(), fetchAllPosts()]);
 
+  // Only index products that are published AND in stock — sold/reserved items are excluded.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const products = (rawProducts as any[]).map(transformProduct);
+  const products = (rawProducts as any[])
+    .filter((p: any) => p.status === 'published' && (!p.availability || p.availability === 'in_stock'))
+    .map(transformProduct);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const posts    = (rawPosts    as any[]).map(transformPost);
 
@@ -148,7 +155,7 @@ export async function GET(req: NextRequest) {
       headers,
       body: JSON.stringify({
         searchableAttributes: ['brand', 'model', 'reference_number', 'title', 'condition', 'tags'],
-        filterableAttributes: ['brand', 'category', 'condition', 'movement', 'price_bucket', 'price_jpy', 'in_stock'],
+        filterableAttributes: ['category', 'brand', 'condition', 'movement_type', 'gender', 'price_jpy', 'availability', 'status', 'in_stock'],
         sortableAttributes:   ['price_jpy', 'created_at'],
         typoTolerance: {
           enabled: true,

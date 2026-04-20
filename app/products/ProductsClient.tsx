@@ -7,14 +7,18 @@ import FilterPanel from '@/components/FilterPanel';
 import { useCurrency } from '@/context/CurrencyContext';
 import {
   CATEGORIES,
+  GENDERS,
   PRICE_RANGES,
-  VALID_CATEGORIES,
-  VALID_CONDITIONS,
+  SORT_OPTIONS,
+  DEFAULT_SORT,
+  PAGE_SIZE,
 } from '@/config/filter-config';
 
 const MEILI_HOST = process.env.NEXT_PUBLIC_MEILISEARCH_HOST;
 const MEILI_KEY  = process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY;
 const PHP_API    = 'https://api.newjapandeals.com';
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface MeiliProduct {
   id:        string;
@@ -26,44 +30,54 @@ interface MeiliProduct {
   image_1:   string | null;
 }
 
-// ── Filter / sort helpers ─────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Escape single-quotes in filter values to prevent Meilisearch filter injection. */
+function esc(v: string): string {
+  return v.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
 
 function buildFilter(params: URLSearchParams): string {
   const parts: string[] = ['in_stock = true'];
 
   const category = params.get('category') ?? '';
-  if (category && VALID_CATEGORIES.has(category)) {
-    parts.push(`category = '${category}'`);
-  }
+  if (category) parts.push(`category = '${esc(category)}'`);
 
-  const conditions = params.getAll('condition').filter(c => VALID_CONDITIONS.has(c));
+  const conditions = params.getAll('condition');
   if (conditions.length > 0) {
-    parts.push(`condition IN [${conditions.map(c => `'${c}'`).join(', ')}]`);
+    parts.push(`condition IN [${conditions.map(c => `'${esc(c)}'`).join(', ')}]`);
   }
 
   const priceMin = params.get('priceMin');
   const priceMax = params.get('priceMax');
-  if (priceMin && Number(priceMin) > 0)      parts.push(`price_jpy >= ${Number(priceMin)}`);
-  if (priceMax && Number(priceMax) < 999999) parts.push(`price_jpy <= ${Number(priceMax)}`);
-
-  // Sanitise free values: strip single-quotes to prevent filter injection
-  const brands = params.getAll('brand').map(b => b.replace(/'/g, ''));
-  if (brands.length > 0) {
-    parts.push(`brand IN [${brands.map(b => `'${b}'`).join(', ')}]`);
+  if (priceMin !== null && priceMax !== null) {
+    const lo = Number(priceMin);
+    const hi = Number(priceMax);
+    if (lo === 0) {
+      parts.push(`price_jpy <= ${hi}`);
+    } else if (hi >= 9999999) {
+      parts.push(`price_jpy >= ${lo}`);
+    } else {
+      parts.push(`price_jpy ${lo} TO ${hi}`);
+    }
   }
 
-  const movements = params.getAll('movement').map(m => m.replace(/'/g, ''));
+  const brands = params.getAll('brand');
+  if (brands.length > 0) {
+    parts.push(`brand IN [${brands.map(b => `'${esc(b)}'`).join(', ')}]`);
+  }
+
+  const movements = params.getAll('movement_type');
   if (movements.length > 0) {
-    parts.push(`movement IN [${movements.map(m => `'${m}'`).join(', ')}]`);
+    parts.push(`movement_type IN [${movements.map(m => `'${esc(m)}'`).join(', ')}]`);
+  }
+
+  const genders = params.getAll('gender');
+  if (genders.length > 0) {
+    parts.push(`gender IN [${genders.map(g => `'${esc(g)}'`).join(', ')}]`);
   }
 
   return parts.join(' AND ');
-}
-
-function buildSort(sort: string): string[] {
-  if (sort === 'price_asc')  return ['price_jpy:asc'];
-  if (sort === 'price_desc') return ['price_jpy:desc'];
-  return ['created_at:desc'];
 }
 
 // ── Product card ──────────────────────────────────────────────────────────────
@@ -76,7 +90,7 @@ function ProductCard({ product }: { product: MeiliProduct }) {
   return (
     <Link
       href={`/product/${product.slug}`}
-      className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col"
+      className="group flex flex-col overflow-hidden rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow"
     >
       <div className="relative aspect-square overflow-hidden bg-gray-100 flex-shrink-0">
         {product.image_1 ? (
@@ -85,11 +99,10 @@ function ProductCard({ product }: { product: MeiliProduct }) {
             src={product.image_1}
             alt={`${product.brand} ${product.title}`}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-4xl text-gray-300">
-            ⌚
-          </div>
+          <div className="flex h-full w-full items-center justify-center text-4xl text-gray-300">⌚</div>
         )}
         {product.condition && (
           <span className="absolute left-2 top-2 rounded bg-white/90 px-2 py-0.5 text-xs font-medium text-gray-800 backdrop-blur-sm">
@@ -97,49 +110,132 @@ function ProductCard({ product }: { product: MeiliProduct }) {
           </span>
         )}
       </div>
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-3.5">
         {product.brand && (
-          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-400">
+          <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
             {product.brand}
           </p>
         )}
-        <h3 className="mb-3 flex-1 text-sm font-medium leading-snug text-gray-900 line-clamp-2">
+        <h3 className="mb-2.5 flex-1 text-sm font-medium leading-snug text-gray-900 line-clamp-2">
           {product.title}
         </h3>
-        <p className="text-base font-bold text-gray-900">{jpyDisplay}</p>
+        <p className="text-sm font-bold text-gray-900">{jpyDisplay}</p>
         {converted && <p className="text-xs text-gray-500">{converted}</p>}
       </div>
     </Link>
   );
 }
 
+// ── Pagination ────────────────────────────────────────────────────────────────
+
+function Pagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+}: {
+  currentPage:  number;
+  totalPages:   number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+
+  const delta = 2;
+  const rangeStart = Math.max(1, currentPage - delta);
+  const rangeEnd   = Math.min(totalPages, currentPage + delta);
+  const range: number[] = [];
+  for (let i = rangeStart; i <= rangeEnd; i++) range.push(i);
+
+  const showLeftEllipsis  = rangeStart > 2;
+  const showRightEllipsis = rangeEnd < totalPages - 1;
+  const showFirst         = rangeStart > 1;
+  const showLast          = rangeEnd < totalPages;
+
+  const btn = (active: boolean) =>
+    `flex h-9 min-w-[36px] items-center justify-center rounded-lg border px-2 text-sm font-medium transition-colors
+     ${active
+       ? 'border-gray-900 bg-gray-900 text-white'
+       : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40'}`;
+
+  return (
+    <nav aria-label="Pagination" className="mt-10 flex items-center justify-center gap-1">
+      <button
+        type="button"
+        disabled={currentPage === 1}
+        onClick={() => onPageChange(currentPage - 1)}
+        className={btn(false)}
+      >
+        ← Prev
+      </button>
+
+      {showFirst && (
+        <>
+          <button type="button" onClick={() => onPageChange(1)} className={btn(false)}>1</button>
+          {showLeftEllipsis && <span className="px-1 text-sm text-gray-400">…</span>}
+        </>
+      )}
+
+      {range.map(p => (
+        <button
+          key={p}
+          type="button"
+          onClick={() => onPageChange(p)}
+          className={btn(p === currentPage)}
+          aria-current={p === currentPage ? 'page' : undefined}
+        >
+          {p}
+        </button>
+      ))}
+
+      {showLast && (
+        <>
+          {showRightEllipsis && <span className="px-1 text-sm text-gray-400">…</span>}
+          <button type="button" onClick={() => onPageChange(totalPages)} className={btn(false)}>
+            {totalPages}
+          </button>
+        </>
+      )}
+
+      <button
+        type="button"
+        disabled={currentPage === totalPages}
+        onClick={() => onPageChange(currentPage + 1)}
+        className={btn(false)}
+      >
+        Next →
+      </button>
+    </nav>
+  );
+}
+
 // ── ProductsClient ────────────────────────────────────────────────────────────
 
 export default function ProductsClient() {
-  const searchParams    = useSearchParams();
-  const router          = useRouter();
-  const pathname        = usePathname();
+  const searchParams = useSearchParams();
+  const router       = useRouter();
+  const pathname     = usePathname();
 
   const [products,         setProducts]         = useState<MeiliProduct[]>([]);
   const [totalHits,        setTotalHits]        = useState(0);
+  const [facets,           setFacets]           = useState<Record<string, Record<string, number>>>({});
   const [loading,          setLoading]          = useState(true);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  // Stable string for effect dependency — only changes when URL actually changes
   const searchParamsStr = searchParams.toString();
 
-  // ── Fetch products whenever URL params change ────────────────────────────
+  // ── Fetch ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
 
     async function doFetch() {
-      const params = new URLSearchParams(searchParamsStr);
-      const q      = params.get('q') ?? '';
-      const filter = buildFilter(params);
-      const sort   = buildSort(params.get('sort') ?? 'newest');
+      const params  = new URLSearchParams(searchParamsStr);
+      const q       = params.get('q') ?? '';
+      const sort    = params.get('sort') ?? DEFAULT_SORT;
+      const page    = Math.max(1, Number(params.get('page') ?? '1'));
+      const offset  = (page - 1) * PAGE_SIZE;
+      const filter  = buildFilter(params);
 
-      // Meilisearch path
+      // ── Meilisearch path ───────────────────────────────────────────────────
       if (MEILI_HOST && MEILI_KEY) {
         try {
           const res = await fetch(`${MEILI_HOST}/indexes/products/search`, {
@@ -148,13 +244,22 @@ export default function ProductsClient() {
               'Content-Type':  'application/json',
               'Authorization': `Bearer ${MEILI_KEY}`,
             },
-            body:   JSON.stringify({ q, filter, sort, limit: 100 }),
+            body: JSON.stringify({
+              q,
+              filter,
+              sort:   [sort],
+              limit:  PAGE_SIZE,
+              offset,
+              facets: ['category', 'brand', 'condition', 'movement_type', 'gender'],
+            }),
             signal: AbortSignal.timeout(8000),
           });
+
           if (!cancelled && res.ok) {
             const data = await res.json();
             setProducts(data.hits ?? []);
             setTotalHits(data.estimatedTotalHits ?? (data.hits?.length ?? 0));
+            setFacets(data.facetDistribution ?? {});
             setLoading(false);
             return;
           }
@@ -163,7 +268,7 @@ export default function ProductsClient() {
         }
       }
 
-      // PHP fallback — no advanced filtering, shows all published products
+      // ── PHP fallback (no filtering, no facets) ─────────────────────────────
       try {
         const res = await fetch(`${PHP_API}/api/products.php?status=published`, {
           signal: AbortSignal.timeout(15000),
@@ -184,6 +289,7 @@ export default function ProductsClient() {
             }))
           );
           setTotalHits(raw.length);
+          setFacets({});
         }
       } catch (err) {
         if (!cancelled) console.error('[Products] PHP fallback error:', err);
@@ -196,9 +302,15 @@ export default function ProductsClient() {
     return () => { cancelled = true; };
   }, [searchParamsStr]);
 
-  // ── URL state helpers ────────────────────────────────────────────────────
+  // ── URL helpers ────────────────────────────────────────────────────────────
+
+  /**
+   * Update filter params and reset to page 1.
+   * Pass null to remove a param, array for multi-value params.
+   */
   const updateFilters = (updates: Record<string, string | string[] | null>) => {
     const params = new URLSearchParams(searchParams.toString());
+    params.delete('page'); // filter change → back to page 1
     for (const [key, value] of Object.entries(updates)) {
       params.delete(key);
       if (value === null) continue;
@@ -211,64 +323,86 @@ export default function ProductsClient() {
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const clearAll = () => router.push(pathname, { scroll: false });
+  const setPage = (page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (page <= 1) params.delete('page');
+    else params.set('page', String(page));
+    router.push(`${pathname}?${params.toString()}`, { scroll: true });
+  };
 
-  // ── Derived filter state for rendering ───────────────────────────────────
-  const q          = searchParams.get('q') ?? '';
-  const category   = searchParams.get('category') ?? '';
-  const conditions = searchParams.getAll('condition');
-  const priceMin   = searchParams.get('priceMin') ? Number(searchParams.get('priceMin')) : null;
-  const priceMax   = searchParams.get('priceMax') ? Number(searchParams.get('priceMax')) : null;
-  const brands     = searchParams.getAll('brand');
-  const movements  = searchParams.getAll('movement');
-  const sort       = searchParams.get('sort') ?? 'newest';
+  const clearAll = () => {
+    const params = new URLSearchParams();
+    const q = searchParams.get('q');
+    if (q) params.set('q', q);
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
-  const activeFilterCount = (
+  // ── Derived state ──────────────────────────────────────────────────────────
+
+  const q             = searchParams.get('q') ?? '';
+  const category      = searchParams.get('category') ?? '';
+  const conditions    = searchParams.getAll('condition');
+  const priceMin      = searchParams.get('priceMin') !== null ? Number(searchParams.get('priceMin')) : null;
+  const priceMax      = searchParams.get('priceMax') !== null ? Number(searchParams.get('priceMax')) : null;
+  const brands        = searchParams.getAll('brand');
+  const movementTypes = searchParams.getAll('movement_type');
+  const genders       = searchParams.getAll('gender');
+  const sort          = searchParams.get('sort') ?? DEFAULT_SORT;
+  const currentPage   = Math.max(1, Number(searchParams.get('page') ?? '1'));
+  const totalPages    = Math.ceil(totalHits / PAGE_SIZE);
+
+  const activeFilterCount =
     (category ? 1 : 0) +
     conditions.length +
     (priceMin !== null || priceMax !== null ? 1 : 0) +
     brands.length +
-    movements.length
-  );
+    movementTypes.length +
+    genders.length;
 
   // Active filter chips
-  const chips: { label: string; onRemove: () => void }[] = [];
+  type Chip = { label: string; onRemove: () => void };
+  const chips: Chip[] = [];
+
   if (category) {
     const cat = CATEGORIES.find(c => c.value === category);
     chips.push({
       label:    cat?.label ?? category,
-      onRemove: () => updateFilters({ category: null, brand: null, movement: null }),
+      onRemove: () => updateFilters({ category: null, movement_type: null, gender: null }),
     });
   }
   conditions.forEach(c =>
-    chips.push({
-      label:    c,
-      onRemove: () => updateFilters({ condition: conditions.filter(x => x !== c) }),
-    })
+    chips.push({ label: c, onRemove: () => updateFilters({ condition: conditions.filter(x => x !== c) }) })
   );
   if (priceMin !== null || priceMax !== null) {
     const range = PRICE_RANGES.find(r => r.min === priceMin && r.max === priceMax);
-    chips.push({
-      label:    range?.label ?? 'Price filter',
-      onRemove: () => updateFilters({ priceMin: null, priceMax: null }),
-    });
+    chips.push({ label: range?.label ?? 'Price filter', onRemove: () => updateFilters({ priceMin: null, priceMax: null }) });
   }
   brands.forEach(b =>
-    chips.push({
-      label:    b,
-      onRemove: () => updateFilters({ brand: brands.filter(x => x !== b) }),
-    })
+    chips.push({ label: b, onRemove: () => updateFilters({ brand: brands.filter(x => x !== b) }) })
   );
-  movements.forEach(m =>
-    chips.push({
-      label:    m,
-      onRemove: () => updateFilters({ movement: movements.filter(x => x !== m) }),
-    })
+  movementTypes.forEach(m =>
+    chips.push({ label: m, onRemove: () => updateFilters({ movement_type: movementTypes.filter(x => x !== m) }) })
   );
+  genders.forEach(g => {
+    const gObj = GENDERS.find(x => x.value === g);
+    chips.push({ label: gObj?.label ?? g, onRemove: () => updateFilters({ gender: genders.filter(x => x !== g) }) });
+  });
 
-  const filterPanelProps = { category, conditions, priceMin, priceMax, brands, movements, resultCount: totalHits, onChange: updateFilters };
+  const filterPanelProps = {
+    category,
+    conditions,
+    priceMin,
+    priceMax,
+    brands,
+    movementTypes,
+    genders,
+    facets,
+    resultCount: totalHits,
+    onChange:    updateFilters,
+  };
 
-  // ── Render ───────────────────────────────────────────────────────────────
+  // ── Render ─────────────────────────────────────────────────────────────────
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -279,32 +413,34 @@ export default function ProductsClient() {
           {q ? `Results for "${q}"` : 'All Products'}
         </h1>
 
-        <div className="flex gap-8">
+        <div className="flex gap-6">
           {/* Desktop sidebar */}
-          <aside className="hidden lg:block w-[280px] flex-shrink-0">
+          <aside className="hidden lg:block w-64 flex-shrink-0">
             <FilterPanel {...filterPanelProps} isDesktop />
           </aside>
 
           {/* Main content */}
           <main className="flex-1 min-w-0">
             {/* Filter bar */}
-            <div className="mb-6">
+            <div className="mb-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
+                {/* Result count */}
                 <p className="text-sm text-gray-500">
                   {loading
                     ? 'Loading\u2026'
                     : `${totalHits.toLocaleString()} result${totalHits !== 1 ? 's' : ''}`}
                 </p>
-                <div className="flex items-center gap-3">
+
+                <div className="flex items-center gap-2">
                   {/* Sort */}
                   <select
                     value={sort}
                     onChange={e => updateFilters({ sort: e.target.value })}
                     className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900"
                   >
-                    <option value="newest">Newest</option>
-                    <option value="price_asc">Price: Low to High</option>
-                    <option value="price_desc">Price: High to Low</option>
+                    {SORT_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
 
                   {/* Mobile filter button */}
@@ -316,7 +452,7 @@ export default function ProductsClient() {
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                       <path d="M1 3h12M3 7h8M5 11h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                     </svg>
-                    Filter{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+                    Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
                   </button>
                 </div>
               </div>
@@ -332,7 +468,7 @@ export default function ProductsClient() {
                       className="inline-flex items-center gap-1 rounded-full bg-gray-900 px-2.5 py-1 text-xs text-white hover:bg-gray-700 transition-colors"
                     >
                       {chip.label}
-                      <span aria-hidden="true" className="text-gray-400">×</span>
+                      <span aria-hidden="true" className="opacity-60">×</span>
                     </button>
                   ))}
                   <button
@@ -346,17 +482,17 @@ export default function ProductsClient() {
               )}
             </div>
 
-            {/* Product grid */}
+            {/* Grid */}
             {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-5">
-                {Array.from({ length: 8 }).map((_, i) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                {Array.from({ length: PAGE_SIZE }).map((_, i) => (
                   <div key={i} className="overflow-hidden rounded-xl bg-white shadow-sm">
                     <div className="aspect-square animate-pulse bg-gray-200" />
-                    <div className="space-y-2 p-4">
+                    <div className="space-y-2 p-3.5">
                       <div className="h-3 w-20 animate-pulse rounded bg-gray-200" />
                       <div className="h-4 w-full animate-pulse rounded bg-gray-200" />
                       <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200" />
-                      <div className="h-6 w-24 animate-pulse rounded bg-gray-200" />
+                      <div className="h-5 w-24 animate-pulse rounded bg-gray-200" />
                     </div>
                   </div>
                 ))}
@@ -365,22 +501,25 @@ export default function ProductsClient() {
               <div className="py-20 text-center text-gray-400">
                 <p className="mb-3 text-xl">No products found</p>
                 {activeFilterCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={clearAll}
-                    className="text-sm text-gray-600 underline"
-                  >
+                  <button type="button" onClick={clearAll} className="text-sm text-gray-600 underline">
                     Clear all filters
                   </button>
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
                 {products.map(product => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
             )}
+
+            {/* Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
           </main>
         </div>
       </div>
@@ -394,8 +533,7 @@ export default function ProductsClient() {
             onClick={() => setMobileFilterOpen(false)}
           />
           {/* Sheet */}
-          <div className="absolute bottom-0 left-0 right-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-white">
-            {/* Sheet header */}
+          <div className="absolute bottom-0 left-0 right-0 max-h-[88vh] overflow-y-auto rounded-t-2xl bg-white">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
               <h2 className="font-semibold text-gray-900">Filters</h2>
               <button
@@ -409,7 +547,7 @@ export default function ProductsClient() {
                 </svg>
               </button>
             </div>
-            <div className="px-5 pb-6">
+            <div className="px-5 pb-6 pt-2">
               <FilterPanel
                 {...filterPanelProps}
                 isDesktop={false}
