@@ -31,7 +31,6 @@ async function fetchFeatured(): Promise<MeiliProduct[]> {
         limit:   6,
         attributesToRetrieve: ['slug', 'title', 'brand', 'condition', 'price_jpy', 'image_1'],
       }),
-      // @ts-expect-error — Next.js extended fetch option
       next: { revalidate: 3600 },
     });
     if (!res.ok) return [];
