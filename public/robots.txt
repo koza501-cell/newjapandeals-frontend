@@ -1,0 +1,4 @@
+# updated 2026-04-20
+User-agent: *
+Allow: /
+Sitemap: https://newjapandeals.com/sitemap.xml
