@@ -34,3 +34,7 @@ next-env.d.ts
 
 # Local documentation with credentials (do not commit)
 NJD_AUTOMATION_PROJECT_COMPLETE.md
+
+# Backend PHP config with secrets — never commit
+api/config.php
+public_html/api/config.php
