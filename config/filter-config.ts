@@ -11,7 +11,7 @@ export const CATEGORIES = [
   { value: 'other',              label: '📦 Other' },
 ] as const;
 
-export const CONDITIONS = ['Like New', 'Good', 'Fair', 'For Parts', 'Used'] as const;
+export const CONDITIONS = ['New', 'Used', 'Working Junk', 'For Parts'] as const;
 
 export const GENDERS = [
   { value: 'mens',   label: "Men's" },
