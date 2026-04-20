@@ -110,6 +110,26 @@ export async function GET(req: NextRequest) {
 
   await ensureMeilisearchRunning();
 
+  // Pre-flight: abort early if Meilisearch is still not reachable after keepalive.
+  // This prevents a misleading 200 with products_indexed:0 masking downtime.
+  try {
+    const healthRes = await fetch(`${MEILI_HOST}/health`, {
+      signal: AbortSignal.timeout(6000),
+    });
+    const health = await healthRes.json().catch(() => ({}));
+    if (!healthRes.ok || (health as { status?: string }).status !== 'available') {
+      console.error('[reindex-meili] pre-flight failed — Meilisearch not available', health);
+      return NextResponse.json(
+        { error: 'Meilisearch not available', health },
+        { status: 503 },
+      );
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[reindex-meili] pre-flight error —', msg);
+    return NextResponse.json({ error: 'Meilisearch health check failed', detail: msg }, { status: 503 });
+  }
+
   const [rawProducts, rawPosts] = await Promise.all([fetchAllProducts(), fetchAllPosts()]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

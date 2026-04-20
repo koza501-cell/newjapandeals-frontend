@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/scrape-marketplace-ratings",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/meili-heartbeat",
+      "schedule": "0 */6 * * *"
     }
   ]
 }
