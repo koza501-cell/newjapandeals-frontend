@@ -87,26 +87,29 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         .catch(() => {});
     }
 
-    // 3. Load cached exchange rates (24-hour TTL)
+    // 3. Load cached exchange rates (6-hour TTL, matches /api/fx ISR)
     try {
       const cached = localStorage.getItem(RATES_CACHE_KEY);
       if (cached) {
         const parsed: RatesCache = JSON.parse(cached);
-        if (Date.now() - parsed.fetchedAt < 24 * 60 * 60 * 1000) {
+        if (Date.now() - parsed.fetchedAt < 6 * 60 * 60 * 1000) {
           setRates({ JPY: 1, ...parsed.rates });
           return;
         }
       }
     } catch {}
 
-    // 4. Fetch fresh rates from Frankfurter (free, no API key)
-    fetch('https://api.frankfurter.app/latest?from=JPY&to=USD,EUR,GBP,AUD,CAD,SGD,HKD')
+    // 4. Fetch fresh rates via our server-side ISR endpoint (/api/fx)
+    fetch('/api/fx')
       .then(r => r.json())
-      .then((data: { rates?: Record<string, number> }) => {
+      .then((data: { base?: string; rates?: Record<string, number> }) => {
         if (data.rates) {
-          setRates({ JPY: 1, ...data.rates });
+          setRates(data.rates); // already includes JPY: 1
+          // Cache without JPY to match restore logic
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { JPY: _jpy, ...withoutJpy } = data.rates;
           localStorage.setItem(RATES_CACHE_KEY, JSON.stringify({
-            rates: data.rates,
+            rates: withoutJpy,
             fetchedAt: Date.now(),
           } satisfies RatesCache));
         }

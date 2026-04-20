@@ -37,9 +37,10 @@ const MEILI_KEY  = process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY;
 const useMeili   = !!(MEILI_HOST && MEILI_KEY);
 
 interface Props {
-  onClose?:    () => void;
-  autoFocus?:  boolean;
-  className?:  string;
+  onClose?:              () => void;
+  autoFocus?:            boolean;
+  className?:            string;
+  handleGlobalShortcut?: boolean;
 }
 
 /** Fire a `search_performed` GA4 / gtag event (ties into Prompt 4.4 analytics). */
@@ -57,7 +58,7 @@ function trackSearch(query: string, resultCount: number, engine: 'meilisearch' |
   } catch { /* analytics must never throw */ }
 }
 
-export default function SearchCommand({ onClose, autoFocus, className }: Props) {
+export default function SearchCommand({ onClose, autoFocus, className, handleGlobalShortcut }: Props) {
   const [query,       setQuery]       = useState('');
   const [products,    setProducts]    = useState<SearchProduct[]>([]);
   const [posts,       setPosts]       = useState<SearchBlogPost[]>([]);
@@ -73,6 +74,20 @@ export default function SearchCommand({ onClose, autoFocus, className }: Props) 
   useEffect(() => {
     if (autoFocus) inputRef.current?.focus();
   }, [autoFocus]);
+
+  // Global ⌘K / Ctrl+K shortcut — only on the instance that opts in
+  useEffect(() => {
+    if (!handleGlobalShortcut) return;
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setIsFocused(true);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [handleGlobalShortcut]);
 
   // Close on click-outside
   useEffect(() => {
@@ -233,21 +248,25 @@ export default function SearchCommand({ onClose, autoFocus, className }: Props) 
           aria-expanded={showDropdown || showPopular}
           aria-controls="search-listbox"
           aria-activedescendant={activeIndex >= 0 ? `search-item-${activeIndex}` : undefined}
-          aria-label="Search watches and guides"
+          aria-label="Search watches, brands, models…"
           placeholder="Search watches, brands, models…"
           value={query}
           onChange={e => setQuery(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onKeyDown={handleKeyDown}
-          className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#B50012] focus:border-transparent placeholder-gray-400 transition-all"
+          className={`w-full pl-9 py-2 text-sm bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#B50012] focus:border-transparent placeholder-gray-400 transition-all ${handleGlobalShortcut && !isFocused && !loading ? 'pr-16' : 'pr-8'}`}
           autoComplete="off"
         />
-        {loading && (
+        {loading ? (
           <div
             className="absolute right-3 w-3.5 h-3.5 border-2 border-[#B50012] border-t-transparent rounded-full animate-spin"
             aria-hidden="true"
           />
-        )}
+        ) : handleGlobalShortcut && !isFocused ? (
+          <span className="absolute right-3 text-[10px] text-gray-400 pointer-events-none select-none hidden sm:block" aria-hidden="true">
+            ⌘K
+          </span>
+        ) : null}
       </div>
 
       {/* Popular searches (focused, no query) */}

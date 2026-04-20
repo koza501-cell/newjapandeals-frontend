@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { useBuyBar } from '@/context/BuyBarContext';
 import { sanitizeText } from '@/lib/sanitize';
 
 const API_URL = 'https://api.newjapandeals.com';
@@ -33,11 +34,13 @@ export default function ProductPageClient() {
   const params = useParams();
   const router = useRouter();
   const { items, addToCart } = useCart();
+  const { setProduct: setBuyBarProduct, setShowBuyBar } = useBuyBar();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
   const slug = typeof params?.slug === 'string' ? params.slug : '';
 
   useEffect(() => {
@@ -70,6 +73,47 @@ export default function ProductPageClient() {
         setRelatedProducts(all.filter(p => p.slug !== product.slug).slice(0, 4));
       }).catch(() => {});
   }, [product]);
+
+  // Publish product data to the BuyBar in the sticky header
+  useEffect(() => {
+    if (!product) return;
+    const productImages = product.images || [];
+    const buyBarPrice   = Number(product.price_jpy) || 0;
+    setBuyBarProduct({
+      id:                  product.id,
+      slug:                product.slug,
+      title:               sanitizeText(product.title_en || product.title || `${product.brand} ${product.model}`),
+      image:               product.image || productImages[0] || null,
+      price_jpy:           buyBarPrice,
+      condition:           product.condition || '',
+      shipping_category_id: product.shipping_category_id,
+      brand:               product.brand,
+      model:               product.model,
+    });
+    return () => {
+      setBuyBarProduct(null);
+      setShowBuyBar(false);
+    };
+  }, [product, setBuyBarProduct, setShowBuyBar]);
+
+  // IntersectionObserver: show Buy Bar when main image scrolls out of view
+  useEffect(() => {
+    if (!product || !imageContainerRef.current) return;
+    const el = imageContainerRef.current;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      // Fallback for very old browsers: always show Buy Bar on product pages
+      setShowBuyBar(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => { setShowBuyBar(!entry.isIntersecting); },
+      { threshold: 0 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [product, setShowBuyBar]);
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -141,7 +185,7 @@ export default function ProductPageClient() {
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Images */}
           <div>
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-4">
+            <div ref={imageContainerRef} className="bg-white rounded-xl shadow-lg overflow-hidden mb-4">
               <div className="aspect-square relative">
                 {currentImage ? (
                   <img src={currentImage} alt={primaryAlt} className="w-full h-full object-contain" />

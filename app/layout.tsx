@@ -2,12 +2,13 @@ import type { Metadata } from 'next';
 import { Playfair_Display, Inter, Source_Sans_3, Noto_Sans_JP } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
-import Header from '@/components/Header';
+import SmartStickyHeader from '@/components/SmartStickyHeader';
 import Footer from '@/components/Footer';
 import TrustRibbon from '@/components/TrustRibbon';
 import { CartProvider } from '@/context/CartContext';
 import { CurrencyProvider } from '@/context/CurrencyContext';
 import { WishlistProvider } from '@/context/WishlistContext';
+import { BuyBarProvider } from '@/context/BuyBarContext';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -168,10 +169,12 @@ export default function RootLayout({
         <CurrencyProvider>
           <WishlistProvider>
             <CartProvider>
-              <Header />
-              <TrustRibbon />
-              {children}
-              <Footer />
+              <BuyBarProvider>
+                <SmartStickyHeader />
+                <TrustRibbon />
+                {children}
+                <Footer />
+              </BuyBarProvider>
             </CartProvider>
           </WishlistProvider>
         </CurrencyProvider>
