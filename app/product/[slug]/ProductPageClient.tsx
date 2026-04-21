@@ -9,6 +9,19 @@ import { sanitizeText } from '@/lib/sanitize';
 
 const API_URL = 'https://api.newjapandeals.com';
 
+/**
+ * Safely converts plain-text description (with \n line breaks) to HTML.
+ * HTML-escapes all special chars first, then converts \n to <br>.
+ * Safe for dangerouslySetInnerHTML since no user-controlled tags can exist.
+ */
+function descToHtml(raw: string): string {
+  return sanitizeText(raw)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br>');
+}
+
 interface Product {
   id: number; sku: string; slug: string; title: string; title_en: string;
   title_jp: string; description: string; description_en: string; description_jp: string;
@@ -271,26 +284,20 @@ export default function ProductPageClient() {
         {product.description_en && (
           <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
             <h2 className="font-bold text-xl mb-4">Description</h2>
-            <div className="text-gray-700 leading-relaxed">
-              {sanitizeText(product.description_en).split('\n').map((line, i) =>
-                line === ''
-                  ? <div key={i} className="h-2" />
-                  : <p key={i} className="my-0.5">{line}</p>
-              )}
-            </div>
+            <div
+              className="text-gray-700 leading-relaxed text-sm"
+              dangerouslySetInnerHTML={{ __html: descToHtml(product.description_en) }}
+            />
           </div>
         )}
 
         {product.description_jp && (
           <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
             <h2 className="font-bold text-xl mb-4">日本語説明 (Japanese Description)</h2>
-            <div className="text-gray-700 leading-relaxed">
-              {sanitizeText(product.description_jp).split('\n').map((line, i) =>
-                line === ''
-                  ? <div key={i} className="h-2" />
-                  : <p key={i} className="my-0.5">{line}</p>
-              )}
-            </div>
+            <div
+              className="text-gray-700 leading-relaxed text-sm"
+              dangerouslySetInnerHTML={{ __html: descToHtml(product.description_jp) }}
+            />
           </div>
         )}
 
