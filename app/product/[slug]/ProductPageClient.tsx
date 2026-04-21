@@ -271,14 +271,26 @@ export default function ProductPageClient() {
         {product.description_en && (
           <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
             <h2 className="font-bold text-xl mb-4">Description</h2>
-            <p className="text-gray-700 whitespace-pre-line leading-relaxed">{sanitizeText(product.description_en)}</p>
+            <div className="text-gray-700 leading-relaxed">
+              {sanitizeText(product.description_en).split('\n').map((line, i) =>
+                line === ''
+                  ? <div key={i} className="h-2" />
+                  : <p key={i} className="my-0.5">{line}</p>
+              )}
+            </div>
           </div>
         )}
 
         {product.description_jp && (
           <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
             <h2 className="font-bold text-xl mb-4">日本語説明 (Japanese Description)</h2>
-            <p className="text-gray-700 whitespace-pre-line leading-relaxed">{sanitizeText(product.description_jp)}</p>
+            <div className="text-gray-700 leading-relaxed">
+              {sanitizeText(product.description_jp).split('\n').map((line, i) =>
+                line === ''
+                  ? <div key={i} className="h-2" />
+                  : <p key={i} className="my-0.5">{line}</p>
+              )}
+            </div>
           </div>
         )}
 
