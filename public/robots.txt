@@ -1,4 +1,29 @@
-# updated 2026-04-20
+# Managed by app/robots.ts — this file is a fallback only.
+# The canonical robots.txt is served by Next.js from app/robots.ts.
 User-agent: *
 Allow: /
-Sitemap: https://newjapandeals.com/sitemap.xml
+Disallow: /api/
+Disallow: /admin/
+Disallow: /checkout
+Disallow: /cart
+Disallow: /order-confirmation
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+Sitemap: https://www.newjapandeals.com/sitemap.xml

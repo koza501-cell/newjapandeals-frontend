@@ -63,6 +63,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
+  // Brand pages (static)
+  const BRAND_SLUGS = ['seiko', 'citizen', 'casio', 'g-shock', 'orient', 'vintage'];
+  const brandPages: MetadataRoute.Sitemap = BRAND_SLUGS.map(slug => ({
+    url: `${baseUrl}/brand/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }));
+
   // Fetch products
   let productPages: MetadataRoute.Sitemap = [];
   try {
@@ -102,5 +111,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Sitemap blog error:', error);
   }
 
-  return [...staticPages, ...productPages, ...blogPages];
+  return [...staticPages, ...brandPages, ...productPages, ...blogPages];
 }

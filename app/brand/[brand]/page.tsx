@@ -44,12 +44,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${brand.name} Watches from Japan | New Japan Deals`,
     description: brand.description,
     alternates: {
-      canonical: `https://newjapandeals.com/brand/${params.brand}`,
+      canonical: `https://www.newjapandeals.com/brand/${params.brand}`,
     },
     openGraph: {
       title: `${brand.name} Watches from Japan`,
       description: brand.description,
-      url: `https://newjapandeals.com/brand/${params.brand}`,
+      url: `https://www.newjapandeals.com/brand/${params.brand}`,
     },
   };
 }
@@ -76,11 +76,11 @@ export default async function BrandPage({ params, searchParams }: Props) {
     '@type': 'CollectionPage',
     name: `${brand.name} Watches`,
     description: brand.description,
-    url: `https://newjapandeals.com/brand/${params.brand}`,
+    url: `https://www.newjapandeals.com/brand/${params.brand}`,
     isPartOf: {
       '@type': 'WebSite',
       name: 'New Japan Deals',
-      url: 'https://newjapandeals.com',
+      url: 'https://www.newjapandeals.com',
     },
   };
 
