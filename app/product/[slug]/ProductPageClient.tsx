@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
@@ -9,17 +9,163 @@ import { sanitizeText } from '@/lib/sanitize';
 
 const API_URL = 'https://api.newjapandeals.com';
 
-/**
- * Safely converts plain-text description (with \n line breaks) to HTML.
- * HTML-escapes all special chars first, then converts \n to <br>.
- * Safe for dangerouslySetInnerHTML since no user-controlled tags can exist.
- */
-function descToHtml(raw: string): string {
-  return sanitizeText(raw)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\n/g, '<br>');
+// ─── Description parser ────────────────────────────────────────────────────
+const SPEC_LABELS = [
+  'Brand', 'Model', 'Reference Number', 'Reference', 'Movement', 'Features',
+  'Case Material', 'Case Size', 'Band Size', 'Band', 'Accessories',
+  'Country of Origin', 'Gender', 'Condition', 'Defects/Notes', 'Defects',
+  'Notes', 'Year', 'Box & Papers', 'Box and Papers', 'Water Resistance',
+];
+
+function isSpecLine(line: string): boolean {
+  return SPEC_LABELS.some(label => line.toLowerCase().startsWith(label.toLowerCase() + ':'));
+}
+
+function parseSpecLine(line: string): { label: string; value: string } | null {
+  for (const label of SPEC_LABELS) {
+    if (line.toLowerCase().startsWith(label.toLowerCase() + ':')) {
+      return { label, value: line.slice(label.length + 1).trim() };
+    }
+  }
+  return null;
+}
+
+function DescriptionBlock({ raw }: { raw: string }) {
+  const lines = sanitizeText(raw).split('\n');
+  const nodes: ReactNode[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i].trim();
+    if (!line) { i++; continue; }
+
+    // --- divider
+    if (/^-{3,}$/.test(line)) {
+      nodes.push(<hr key={`hr-${i}`} className="my-4 border-gray-200" />);
+      i++;
+      continue;
+    }
+
+    // ⚠ / IMPORTANT NOTES warning box
+    if (line.startsWith('⚠') || /^important notes/i.test(line)) {
+      const title = line;
+      i++;
+      const listItems: { bold: string; rest: string }[] = [];
+      const extraLines: string[] = [];
+      while (i < lines.length && !/^-{3,}$/.test(lines[i].trim())) {
+        const bl = lines[i].trim();
+        const numMatch = bl.match(/^\d+\.\s+(.+)/);
+        if (numMatch) {
+          const content = numMatch[1];
+          const colonIdx = content.indexOf(':');
+          if (colonIdx > 0) {
+            listItems.push({ bold: content.slice(0, colonIdx), rest: content.slice(colonIdx + 1) });
+          } else {
+            listItems.push({ bold: '', rest: content });
+          }
+        } else if (bl) {
+          extraLines.push(bl);
+        }
+        i++;
+      }
+      nodes.push(
+        <div key={`warn-${i}`} className="my-4 p-4 bg-[#fff8e1] border-l-4 border-orange-400 rounded-r-lg">
+          <p className="font-bold text-orange-700 mb-2 text-sm">{title}</p>
+          {extraLines.map((l, idx) => <p key={idx} className="text-sm text-gray-700 mb-1">{l}</p>)}
+          {listItems.length > 0 && (
+            <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700 mt-2">
+              {listItems.map((item, idx) => (
+                <li key={idx}>{item.bold && <strong>{item.bold}: </strong>}{item.rest}</li>
+              ))}
+            </ol>
+          )}
+        </div>
+      );
+      continue;
+    }
+
+    // 💰 green highlight box
+    if (line.startsWith('💰')) {
+      const boxLines: string[] = [line];
+      i++;
+      while (i < lines.length && lines[i].trim() && !/^-{3,}$/.test(lines[i].trim())) {
+        boxLines.push(lines[i].trim());
+        i++;
+      }
+      nodes.push(
+        <div key={`green-${i}`} className="my-4 p-4 bg-[#e8f5e9] border-l-4 border-green-500 rounded-r-lg">
+          {boxLines.map((l, idx) => <p key={idx} className="text-sm text-green-800">{l}</p>)}
+        </div>
+      );
+      continue;
+    }
+
+    // 📎 Original listing link
+    if (line.startsWith('📎')) {
+      const urlMatch = line.match(/https?:\/\/[^\s]+/);
+      nodes.push(
+        <p key={`link-${i}`} className="text-sm my-2 text-gray-700">
+          {urlMatch ? (
+            <>{line.slice(0, line.indexOf(urlMatch[0]))}<a href={urlMatch[0]} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">{urlMatch[0]}</a></>
+          ) : line}
+        </p>
+      );
+      i++;
+      continue;
+    }
+
+    // Spec table — collect consecutive spec lines
+    if (isSpecLine(line)) {
+      const rows: { label: string; value: string }[] = [];
+      while (i < lines.length) {
+        const spec = parseSpecLine(lines[i].trim());
+        if (!spec) break;
+        rows.push(spec);
+        i++;
+      }
+      nodes.push(
+        <div key={`specs-${i}`} className="my-4 overflow-hidden rounded-lg border border-gray-200">
+          <table className="w-full text-sm">
+            <tbody>
+              {rows.map((row, idx) => (
+                <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td className="px-4 py-2.5 font-semibold text-gray-600 w-2/5 border-r border-gray-100">{row.label}</td>
+                  <td className="px-4 py-2.5 text-gray-800">{row.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      continue;
+    }
+
+    // "About This Watch" — italic intro for following lines
+    if (/^about this watch/i.test(line)) {
+      i++; // skip the heading
+      const introLines: string[] = [];
+      while (i < lines.length) {
+        const il = lines[i].trim();
+        if (!il || isSpecLine(il) || /^-{3,}$/.test(il) || il.startsWith('⚠') || /^important notes/i.test(il)) break;
+        introLines.push(il);
+        i++;
+      }
+      if (introLines.length > 0) {
+        nodes.push(
+          <p key={`intro-${i}`} className="text-sm italic text-gray-600 my-3 leading-relaxed">
+            {introLines.join(' ')}
+          </p>
+        );
+      }
+      continue;
+    }
+
+    // Regular paragraph
+    nodes.push(<p key={`p-${i}`} className="text-sm text-gray-700 my-1 leading-relaxed">{line}</p>);
+    i++;
+  }
+
+  return <>{nodes}</>;
 }
 
 interface Product {
@@ -284,20 +430,14 @@ export default function ProductPageClient() {
         {product.description_en && (
           <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
             <h2 className="font-bold text-xl mb-4">Description</h2>
-            <div
-              className="text-gray-700 leading-relaxed text-sm"
-              dangerouslySetInnerHTML={{ __html: descToHtml(product.description_en) }}
-            />
+            <DescriptionBlock raw={product.description_en} />
           </div>
         )}
 
         {product.description_jp && (
           <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
             <h2 className="font-bold text-xl mb-4">日本語説明 (Japanese Description)</h2>
-            <div
-              className="text-gray-700 leading-relaxed text-sm"
-              dangerouslySetInnerHTML={{ __html: descToHtml(product.description_jp) }}
-            />
+            <DescriptionBlock raw={product.description_jp} />
           </div>
         )}
 
