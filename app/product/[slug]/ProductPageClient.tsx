@@ -351,7 +351,14 @@ export default function ProductPageClient() {
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-100 text-6xl text-gray-300">⌚</div>
                 )}
-                {product.condition && (
+                {product.status === 'sold' && (
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                    <span className="bg-red-600 text-white px-8 py-3 rounded-lg text-2xl font-bold tracking-wider transform -rotate-12 shadow-lg">
+                      SOLD
+                    </span>
+                  </div>
+                )}
+                {product.condition && product.status !== 'sold' && (
                   <span className="absolute top-4 left-4 bg-black/80 text-white px-3 py-1 rounded-full text-sm">{product.condition}</span>
                 )}
               </div>
@@ -388,7 +395,7 @@ export default function ProductPageClient() {
               </div>
               <hr className="my-3" />
               <div className="flex justify-between text-xl font-bold">
-                <span>Total</span><span className="text-red-600">¥{totalPrice.toLocaleString()}</span>
+                <span>Total</span><span className={product.status === 'sold' ? 'text-gray-400 line-through' : 'text-red-600'}>¥{totalPrice.toLocaleString()}</span>
               </div>
               <p className="text-right text-gray-500 text-sm">~${Math.round(totalPrice / 150)} USD</p>
               <p className="text-xs text-gray-400 mt-4">* Final shipping calculated at checkout based on destination</p>
@@ -403,6 +410,13 @@ export default function ProductPageClient() {
 
             {/* Buttons */}
             <div className="space-y-3">
+              {product.status === 'sold' ? (
+                <>
+                  <div className="w-full bg-gray-400 text-white py-4 rounded-xl font-bold text-lg text-center cursor-not-allowed">SOLD</div>
+                  <p className="text-center text-sm text-gray-500">This item has been sold. Browse our other watches below.</p>
+                </>
+              ) : (
+              <>
               {isInCart ? (
                 <Link href="/cart" className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2">✓ In Your Cart - View Cart</Link>
               ) : (
@@ -413,6 +427,8 @@ export default function ProductPageClient() {
                 <a href={product.mercari_url} target="_blank" rel="noopener noreferrer" className="w-full bg-white border-2 border-gray-200 text-gray-800 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 hover:bg-gray-50">🇯🇵 Buy on Mercari Japan</a>
               ) : (
                 <div className="w-full bg-gray-100 text-gray-400 py-4 rounded-xl font-bold text-lg text-center border-2 border-gray-200">🇯🇵 Mercari link coming soon</div>
+              )}
+              </>
               )}
               <p className="text-center text-xs text-gray-400 pt-1">Licensed Dealer: 第441200001622号</p>
             </div>

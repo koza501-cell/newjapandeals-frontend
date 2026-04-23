@@ -27,10 +27,10 @@ async function fetchNewArrivals(): Promise<MeiliProduct[]> {
       body: JSON.stringify({
         q:       '',
         // Exclude featured products (they show in the section above) and sold/archived
-        filter:  'featured != 1 AND status NOT IN ["sold_mercari", "sold_website", "archived"] AND availability != "sold"',
+        filter:  'featured != 1 AND status NOT IN ["sold_mercari", "sold_website", "archived", "sold"]',
         sort:    ['created_at:desc'],
-        limit:   4,
-        attributesToRetrieve: ['slug', 'title', 'brand', 'condition', 'price_jpy', 'image_1'],
+        limit:   8,
+        attributesToRetrieve: ['slug', 'title', 'brand', 'condition', 'price_jpy', 'image_1', 'status'],
       }),
       next: { revalidate: 3600 },
     });
@@ -52,10 +52,10 @@ export default async function NewArrivalsSection() {
         {/* Header */}
         <div className="mb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900" style={{ fontFamily: 'Playfair Display, serif' }}>
-            New Arrivals
+            Latest Arrivals from Japan
           </h2>
           <p className="text-gray-500 text-sm mt-1">
-            Just landed from Japan
+            Just landed — shop the newest watches
           </p>
         </div>
 

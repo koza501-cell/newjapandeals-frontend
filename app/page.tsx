@@ -7,6 +7,7 @@ import SavingsCalculator from '@/components/SavingsCalculator';
 import WhyNotProxy from '@/components/WhyNotProxy';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import PromoBanner from '@/components/PromoBanner';
+import RecentlySoldSection from '@/components/RecentlySoldSection';
 import type { TrustStats } from '@/app/api/trust-stats/route';
 
 // ISR: regenerate the homepage shell at most every 5 minutes.
@@ -56,8 +57,11 @@ export default async function Home() {
       {/* Featured Watches — DB-driven (featured=1 in products table) */}
       <FeaturedWatchesSection />
 
-      {/* New Arrivals — automatic, 4 most recent non-featured products */}
+      {/* New Arrivals — automatic, 8 most recent non-featured products */}
       <NewArrivalsSection />
+
+      {/* Recently Sold — social proof */}
+      <RecentlySoldSection />
 
       {/* Savings Calculator */}
       <SavingsCalculator />

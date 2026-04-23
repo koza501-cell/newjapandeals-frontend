@@ -94,7 +94,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
           '@type':         'Offer',
           price:           product.price_usd || Math.round((Number(product.price_jpy) || 0) / 150),
           priceCurrency:   'USD',
-          availability:    'https://schema.org/InStock',
+          availability:    product.status === 'sold' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
           itemCondition:   'https://schema.org/UsedCondition',
           url:             `${SITE_URL}/product/${params.slug}`,
           seller: {

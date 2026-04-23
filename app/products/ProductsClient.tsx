@@ -28,6 +28,7 @@ interface MeiliProduct {
   condition: string;
   price_jpy: number;
   image_1:   string | null;
+  status?:   string;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -40,7 +41,8 @@ function esc(v: string): string {
 // These statuses are ALWAYS excluded — cannot be overridden by user filters.
 // Belt-and-suspenders: the reindex cron also excludes these from the index,
 // but we enforce it here too so a re-listed item never slips through.
-const BASE_FILTER = 'status NOT IN ["sold_mercari", "sold_website", "archived"] AND availability != "sold"';
+// Note: status='sold' products ARE shown (with a SOLD badge).
+const BASE_FILTER = 'status NOT IN ["sold_mercari", "sold_website", "archived"]';
 
 function buildFilter(params: URLSearchParams): string {
   const parts: string[] = [BASE_FILTER];
@@ -91,6 +93,7 @@ function ProductCard({ product }: { product: MeiliProduct }) {
   const { format, currency } = useCurrency();
   const jpyDisplay = `¥${product.price_jpy.toLocaleString()}`;
   const converted  = currency !== 'JPY' ? format(product.price_jpy) : null;
+  const isSold = product.status === 'sold';
 
   return (
     <Link
@@ -103,13 +106,20 @@ function ProductCard({ product }: { product: MeiliProduct }) {
           <img
             src={product.image_1}
             alt={`${product.brand} ${product.title}`}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className={`h-full w-full object-cover transition-transform duration-300 ${isSold ? '' : 'group-hover:scale-105'}`}
             loading="lazy"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-4xl text-gray-300">⌚</div>
         )}
-        {product.condition && (
+        {isSold && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <span className="bg-red-600 text-white px-5 py-1.5 rounded-lg text-lg font-bold tracking-wider transform -rotate-12 shadow-lg">
+              SOLD
+            </span>
+          </div>
+        )}
+        {product.condition && !isSold && (
           <span className="absolute left-2 top-2 rounded bg-white/90 px-2 py-0.5 text-xs font-medium text-gray-800 backdrop-blur-sm">
             {product.condition}
           </span>
@@ -124,8 +134,8 @@ function ProductCard({ product }: { product: MeiliProduct }) {
         <h3 className="mb-2.5 flex-1 text-sm font-medium leading-snug text-gray-900 line-clamp-2">
           {product.title}
         </h3>
-        <p className="text-sm font-bold text-gray-900">{jpyDisplay}</p>
-        {converted && <p className="text-xs text-gray-500">{converted}</p>}
+        <p className={`text-sm font-bold ${isSold ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{jpyDisplay}</p>
+        {converted && <p className={`text-xs ${isSold ? 'text-gray-400 line-through' : 'text-gray-500'}`}>{converted}</p>}
       </div>
     </Link>
   );
@@ -255,7 +265,8 @@ export default function ProductsClient() {
               sort:   [sort],
               limit:  PAGE_SIZE,
               offset,
-              facets: ['category', 'brand', 'condition', 'movement_type', 'gender'],
+              facets: ['category', 'brand', 'condition', 'movement_type', 'gender', 'status'],
+              attributesToRetrieve: ['id', 'slug', 'title', 'brand', 'condition', 'price_jpy', 'image_1', 'status'],
             }),
             signal: AbortSignal.timeout(8000),
           });
@@ -291,6 +302,7 @@ export default function ProductsClient() {
               condition: p.condition ?? '',
               price_jpy: Number(p.price_jpy ?? 0),
               image_1:   p.image_1 ?? p.image ?? null,
+              status:    p.status ?? '',
             }))
           );
           setTotalHits(raw.length);

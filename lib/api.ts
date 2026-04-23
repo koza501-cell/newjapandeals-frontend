@@ -125,12 +125,28 @@ export async function getCategoryProducts(slug: string, page = 1): Promise<ApiRe
 }
 
 // Brands API
-export async function getBrands(): Promise<ApiResponse<{ brand: string; product_count: number }[]>> {
-  return fetchApi('/api/brands');
+export async function getBrands(): Promise<{ success: boolean; brands: { brand: string; count: string }[] }> {
+  const res = await fetch(`${API_URL}/api/products.php?action=brands`, { next: { revalidate: 300 } });
+  return res.json();
 }
 
-export async function getBrandProducts(brand: string, page = 1): Promise<ApiResponse<Product[]>> {
-  return fetchApi(`/api/brands/${encodeURIComponent(brand)}/products?page=${page}`);
+export async function getBrandProducts(brand: string, page = 1, limit = 20): Promise<ApiResponse<Product[]>> {
+  const res = await fetch(
+    `${API_URL}/api/products.php?brand=${encodeURIComponent(brand)}&limit=${limit}`,
+    { next: { revalidate: 60 } },
+  );
+  const data = await res.json();
+  const products = data.products || data.data || [];
+  return {
+    success: true,
+    data: products,
+    pagination: {
+      page,
+      limit,
+      total: products.length,
+      pages: Math.ceil(products.length / limit),
+    },
+  };
 }
 
 // Shipping API
