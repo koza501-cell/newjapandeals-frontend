@@ -27,6 +27,7 @@ export default function Footer() {
               <li><Link href="/brand/g-shock" className="hover:text-gold transition-colors">G-Shock Watches</Link></li>
               <li><Link href="/brand/orient" className="hover:text-gold transition-colors">Orient Watches</Link></li>
               <li><Link href="/brand/vintage" className="hover:text-gold transition-colors">Vintage Watches</Link></li>
+              <li><Link href="/watches" className="hover:text-gold transition-colors">Browse by Category</Link></li>
             </ul>
           </nav>
 
@@ -39,6 +40,7 @@ export default function Footer() {
               <li><Link href="/contact" className="hover:text-gold transition-colors">Contact Us</Link></li>
               <li><Link href="/track-order" className="hover:text-gold transition-colors">Track Your Order</Link></li>
               <li><Link href="/shipping-policy" className="hover:text-gold transition-colors">Shipping Information</Link></li>
+              <li><Link href="/shipping-to-usa" className="hover:text-gold transition-colors">Shipping to USA</Link></li>
               <li><Link href="/returns" className="hover:text-gold transition-colors">Returns & Refunds</Link></li>
               <li><Link href="/about" className="hover:text-gold transition-colors">About Us</Link></li>
             </ul>

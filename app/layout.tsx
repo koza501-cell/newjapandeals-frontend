@@ -66,6 +66,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://www.newjapandeals.com',
     languages: {
+      'en-US': 'https://www.newjapandeals.com',
       'en': 'https://www.newjapandeals.com',
       'x-default': 'https://www.newjapandeals.com',
     },

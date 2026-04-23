@@ -74,9 +74,14 @@ export default function Hero() {
           </div>
 
           {/* Main CTA */}
-          <p className="text-lg text-gray-400 mb-8 max-w-2xl mx-auto">
-            Buy authentic Japanese watches directly from a 10-year trusted dealer. 
+          <p className="text-lg text-gray-400 mb-4 max-w-2xl mx-auto">
+            Buy authentic Japanese watches directly from a 10-year trusted dealer.
             <span className="text-[#C9A962]"> One price. One payment. Ships in 48 hours.</span>
+          </p>
+          <p className="text-sm text-gray-400 mb-8">
+            <Link href="/shipping-to-usa" className="inline-flex items-center gap-1.5 text-blue-400 hover:text-blue-300 transition-colors font-medium">
+              🇺🇸 Ships to USA — No Surprise Customs Fees
+            </Link>
           </p>
 
           {/* CTA Buttons */}
