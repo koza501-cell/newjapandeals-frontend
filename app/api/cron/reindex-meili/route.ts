@@ -186,7 +186,26 @@ export async function GET(req: NextRequest) {
     }),
   ]);
 
-  // Add documents — returns { taskUid } from Meilisearch
+  // Clear stale documents then replace with the fresh set.
+  // Using DELETE-then-POST ensures products that are no longer published
+  // (e.g. status changed to draft/sold) are removed from the search index.
+  await Promise.allSettled([
+    fetch(`${MEILI_HOST}/indexes/products/documents`, {
+      method:  'DELETE',
+      headers,
+      signal:  AbortSignal.timeout(8000),
+    }),
+    fetch(`${MEILI_HOST}/indexes/blog/documents`, {
+      method:  'DELETE',
+      headers,
+      signal:  AbortSignal.timeout(8000),
+    }),
+  ]);
+
+  // Small delay to let Meilisearch process the deletes before adding new docs
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  // Add fresh documents — returns { taskUid } from Meilisearch
   const [pRes, bRes] = await Promise.allSettled([
     products.length > 0
       ? fetch(`${MEILI_HOST}/indexes/products/documents?primaryKey=id`, {
