@@ -273,11 +273,20 @@ export default function ProductsClient() {
 
           if (!cancelled && res.ok) {
             const data = await res.json();
-            setProducts(data.hits ?? []);
-            setTotalHits(data.estimatedTotalHits ?? (data.hits?.length ?? 0));
-            setFacets(data.facetDistribution ?? {});
-            setLoading(false);
-            return;
+            const hits = data.hits ?? [];
+            // If an unfiltered, no-query search returns 0 results the index is
+            // likely empty (e.g. after a Meilisearch crash/restart). Fall through
+            // to the PHP fallback so the page never goes blank unexpectedly.
+            const hasUserFilters = q !== '' || filter !== BASE_FILTER;
+            if (hits.length > 0 || hasUserFilters) {
+              setProducts(hits);
+              setTotalHits(data.estimatedTotalHits ?? hits.length);
+              setFacets(data.facetDistribution ?? {});
+              setLoading(false);
+              return;
+            }
+            // 0 results + no filters → index appears empty, fall through to PHP
+            console.warn('[Products] Meilisearch returned 0 results with no filters — falling back to PHP');
           }
         } catch (err) {
           if (!cancelled) console.error('[Products] Meilisearch error:', err);
