@@ -128,10 +128,10 @@ export default function FeaturedProducts() {
                   
                   {/* SOLD Overlay */}
                   {isSold && (
-                    <div className="absolute inset-0 bg-black/30 overflow-hidden">
+                    <div className="absolute inset-0 bg-black/[0.4] overflow-hidden">
                       <div
-                        className="absolute top-1/2 left-1/2 w-[150%] py-3 text-center text-2xl font-bold uppercase tracking-widest text-white shadow-lg"
-                        style={{ backgroundColor: 'rgba(229, 57, 53, 0.85)', transform: 'translate(-50%, -50%) rotate(-35deg)' }}
+                        className="absolute top-1/2 left-1/2 w-[200%] h-[40px] flex items-center justify-center font-bold text-white uppercase"
+                        style={{ backgroundColor: '#e53935', transform: 'translate(-50%, -50%) rotate(-35deg)', fontSize: '20px', letterSpacing: '4px' }}
                       >
                         SOLD
                       </div>
