@@ -51,7 +51,7 @@ export default async function FeaturedWatchesSection() {
         {/* Header */}
         <div className="mb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900" style={{ fontFamily: 'Playfair Display, serif' }}>
-            Featured Watches
+            Featured Products
           </h2>
           <p className="text-gray-500 text-sm mt-1">
             Hand-picked from our Japan inventory · Updated weekly

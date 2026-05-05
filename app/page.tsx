@@ -5,14 +5,14 @@ import FeaturedWatchesSection from '@/components/FeaturedWatchesSection';
 import NewArrivalsSection from '@/components/NewArrivalsSection';
 import SavingsCalculator from '@/components/SavingsCalculator';
 import WhyNotProxy from '@/components/WhyNotProxy';
-import FeaturedProducts from '@/components/FeaturedProducts';
+
 import PromoBanner from '@/components/PromoBanner';
 import RecentlySoldSection from '@/components/RecentlySoldSection';
 import type { TrustStats } from '@/app/api/trust-stats/route';
 
 // ISR: regenerate the homepage shell at most every 5 minutes.
 // Above-the-fold content (Hero, TrustBar) is static; client components
-// (FeaturedProducts, SavingsCalculator, LiveTrustBar) stream in after hydration.
+// (FeaturedWatchesSection, SavingsCalculator, LiveTrustBar) stream in after hydration.
 export const revalidate = 300;
 
 /** Server-side prefetch of trust stats so LiveTrustBar has data on first paint. */
@@ -54,7 +54,7 @@ export default async function Home() {
       {/* Live Trust Statistics Bar */}
       <LiveTrustBar fallbackData={trustStats} />
 
-      {/* Featured Watches — DB-driven (featured=1 in products table) */}
+      {/* Featured Products — DB-driven (featured=1 in products table) */}
       <FeaturedWatchesSection />
 
       {/* New Arrivals — automatic, 8 most recent non-featured products */}
@@ -66,8 +66,6 @@ export default async function Home() {
       {/* Savings Calculator */}
       <SavingsCalculator />
 
-      {/* Featured Products */}
-      <FeaturedProducts />
 
       {/* Why Not Proxy Section */}
       <WhyNotProxy />
