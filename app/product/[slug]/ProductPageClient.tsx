@@ -352,13 +352,10 @@ export default function ProductPageClient() {
                   <div className="w-full h-full flex items-center justify-center bg-gray-100 text-6xl text-gray-300">⌚</div>
                 )}
                 {product.status === 'sold' && (
-                  <div className="absolute inset-0 bg-black/[0.4] overflow-hidden">
-                    <div
-                      className="absolute top-1/2 left-1/2 w-[200%] h-[40px] flex items-center justify-center font-bold text-white uppercase"
-                      style={{ backgroundColor: '#e53935', transform: 'translate(-50%, -50%) rotate(-35deg)', fontSize: '20px', letterSpacing: '4px' }}
-                    >
+                  <div className="absolute top-0 left-0" style={{ width: 0, height: 0, borderTop: '80px solid #e53935', borderRight: '80px solid transparent' }}>
+                    <span className="absolute font-bold text-white" style={{ fontSize: '14px', transform: 'rotate(-45deg)', top: '-68px', left: '2px', width: '56px', textAlign: 'center', lineHeight: 1 }}>
                       SOLD
-                    </div>
+                    </span>
                   </div>
                 )}
                 {product.condition && product.status !== 'sold' && (
