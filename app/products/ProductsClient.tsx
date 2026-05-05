@@ -113,10 +113,13 @@ function ProductCard({ product }: { product: MeiliProduct }) {
           <div className="flex h-full w-full items-center justify-center text-4xl text-gray-300">⌚</div>
         )}
         {isSold && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <span className="bg-red-600 text-white px-5 py-1.5 rounded-lg text-lg font-bold tracking-wider transform -rotate-12 shadow-lg">
+          <div className="absolute inset-0 bg-black/30 overflow-hidden">
+            <div
+              className="absolute top-1/2 left-1/2 w-[150%] py-3 text-center text-2xl font-bold uppercase tracking-widest text-white shadow-lg"
+              style={{ backgroundColor: 'rgba(229, 57, 53, 0.85)', transform: 'translate(-50%, -50%) rotate(-35deg)' }}
+            >
               SOLD
-            </span>
+            </div>
           </div>
         )}
         {product.condition && !isSold && (
