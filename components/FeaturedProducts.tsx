@@ -128,8 +128,8 @@ export default function FeaturedProducts() {
                   
                   {/* SOLD Overlay */}
                   {isSold && (
-                    <div className="absolute top-0 left-0" style={{ width: 0, height: 0, borderTop: '80px solid #e53935', borderRight: '80px solid transparent' }}>
-                      <span className="absolute font-bold text-white" style={{ fontSize: '14px', transform: 'rotate(-45deg)', top: '-68px', left: '2px', width: '56px', textAlign: 'center', lineHeight: 1 }}>
+                    <div className="absolute top-0 left-0" style={{ width: 0, height: 0, borderTop: '100px solid #e53935', borderRight: '100px solid transparent' }}>
+                      <span className="absolute font-bold text-white" style={{ fontSize: '16px', fontWeight: 'bold', letterSpacing: '1px', transform: 'rotate(-45deg)', top: '-82px', left: '6px', width: '70px', textAlign: 'center', lineHeight: 1 }}>
                         SOLD
                       </span>
                     </div>
