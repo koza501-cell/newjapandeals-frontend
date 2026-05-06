@@ -7,28 +7,49 @@ export default function OrderConfirmationPage() {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'paypal' | 'stripe' | null>(null);
+  const [stripeSession, setStripeSession] = useState<any>(null);
 
   useEffect(() => {
-    // Get order number from URL
     const params = new URLSearchParams(window.location.search);
     const orderNum = params.get('order');
-    setOrderNumber(orderNum);
+    const sessionId = params.get('session_id');
 
-    if (orderNum) {
+    localStorage.removeItem('njd_cart');
+    localStorage.removeItem('njd_shipping');
+
+    if (sessionId) {
+      setPaymentMethod('stripe');
+      fetchStripeSession(sessionId);
+    } else if (orderNum) {
+      setPaymentMethod('paypal');
+      setOrderNumber(orderNum);
       fetchOrderDetails(orderNum);
-      // Clear cart
-      localStorage.removeItem('njd_cart');
-      localStorage.removeItem('njd_shipping');
     } else {
       setLoading(false);
     }
   }, []);
 
+  const fetchStripeSession = async (sessionId: string) => {
+    try {
+      const res = await fetch(`/api/checkout/stripe?session_id=${sessionId}`);
+      const data = await res.json();
+      if (data.success && data.session) {
+        setStripeSession(data.session);
+        setOrderNumber(data.session.id);
+      }
+    } catch (err) {
+      console.error('Failed to fetch Stripe session:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchOrderDetails = async (orderNum: string) => {
     try {
       const res = await fetch(`https://api.newjapandeals.com/api/orders.php?order_number=${orderNum}`);
       const data = await res.json();
-      
+
       if (data.success && data.order) {
         setOrder(data.order);
       }
@@ -66,7 +87,54 @@ export default function OrderConfirmationPage() {
           </div>
         </div>
 
-        {/* Order Details */}
+        {/* Stripe Order Details */}
+        {paymentMethod === 'stripe' && stripeSession && (
+          <div className="bg-white p-6 rounded-xl shadow-lg mb-8">
+            <h2 className="text-xl font-bold mb-4">Order Details</h2>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Email</span>
+                <span>{stripeSession.customer_email}</span>
+              </div>
+              {stripeSession.metadata?.shipping_method && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Shipping Method</span>
+                  <span>{stripeSession.metadata.shipping_method}</span>
+                </div>
+              )}
+              <hr className="my-2" />
+              <div className="flex justify-between text-lg font-bold">
+                <span>Total Paid</span>
+                <span className="text-[#B50012]">
+                  ${((stripeSession.amount_total || 0) / 100).toFixed(2)} USD
+                </span>
+              </div>
+              {stripeSession.metadata?.total_jpy && (
+                <div className="text-right text-gray-500 text-xs">
+                  ~¥{parseInt(stripeSession.metadata.total_jpy).toLocaleString()}
+                </div>
+              )}
+            </div>
+
+            {stripeSession.metadata?.shipping_address && (() => {
+              try {
+                const addr = JSON.parse(stripeSession.metadata.shipping_address);
+                return (
+                  <div className="mt-4 pt-4 border-t">
+                    <h3 className="font-medium text-gray-500 mb-2">Ship To</h3>
+                    <p className="font-medium">{stripeSession.metadata.customer_name}</p>
+                    <p>{addr.address1}</p>
+                    {addr.address2 && <p>{addr.address2}</p>}
+                    <p>{addr.city}{addr.state ? `, ${addr.state}` : ''} {addr.postalCode}</p>
+                    <p>{addr.country}</p>
+                  </div>
+                );
+              } catch { return null; }
+            })()}
+          </div>
+        )}
+
+        {/* PayPal Order Details */}
         {order && (
           <div className="bg-white p-6 rounded-xl shadow-lg mb-8">
             <h2 className="text-xl font-bold mb-4">Order Details</h2>
@@ -175,6 +243,11 @@ export default function OrderConfirmationPage() {
         {order && (
           <p className="text-center text-gray-500 text-sm mt-8">
             A confirmation email has been sent to <strong>{order.customer_email}</strong>
+          </p>
+        )}
+        {paymentMethod === 'stripe' && stripeSession?.customer_email && (
+          <p className="text-center text-gray-500 text-sm mt-8">
+            A confirmation email has been sent to <strong>{stripeSession.customer_email}</strong>
           </p>
         )}
       </div>

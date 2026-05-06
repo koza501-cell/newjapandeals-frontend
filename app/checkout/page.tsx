@@ -166,7 +166,7 @@ export default function CheckoutPage() {
     setPaymentError('');
 
     try {
-      const response = await fetch(`${API_URL}/create-checkout-session.php`, {
+      const response = await fetch('/api/checkout/stripe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(getOrderData()),
