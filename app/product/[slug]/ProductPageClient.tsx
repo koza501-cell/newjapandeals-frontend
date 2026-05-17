@@ -176,6 +176,7 @@ interface Product {
   year_of_production: string; box_papers: boolean; price_jpy: number; price_usd: number;
   weight_g: number; mercari_url: string; image?: string; images?: string[];
   status: string; shipping_category_id: number | null;
+  category_slugs?: string[]; category_names?: string[];
 }
 
 const FAQ_ITEMS = [
@@ -447,6 +448,23 @@ export default function ProductPageClient() {
           <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
             <h2 className="font-bold text-xl mb-4">Description</h2>
             <DescriptionBlock raw={product.description_en} />
+            {/* Categories — plain text at bottom of description */}
+            {product.category_names && product.category_names.length > 0 && (
+              <p className="mt-6 pt-4 border-t border-gray-100 text-xs text-gray-500">
+                <span className="text-gray-400">Categories: </span>
+                {product.category_slugs?.map((slug, idx) => (
+                  <span key={slug}>
+                    {idx > 0 && ', '}
+                    <Link
+                      href={`/products?category=${slug}`}
+                      className="text-gray-600 hover:text-[#B50012] hover:underline"
+                    >
+                      {product.category_names?.[idx]}
+                    </Link>
+                  </span>
+                ))}
+              </p>
+            )}
           </div>
         )}
 
