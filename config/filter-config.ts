@@ -4,11 +4,15 @@
  */
 
 export const CATEGORIES = [
-  { value: '',                   label: 'All Items' },
-  { value: 'watches',            label: '⌚ Watches' },
-  { value: 'diecast-toys',       label: '🚗 Die-cast & Toys' },
-  { value: 'camera-accessories', label: '📷 Camera Accessories' },
-  { value: 'other',              label: '📦 Other' },
+  { value: '',            label: 'All Items' },
+  { value: 'watches',     label: '⌚ Watches' },
+  { value: 'antique',     label: '🏺 Antique / Vintage' },
+  { value: 'cameras',     label: '📷 Cameras & Photo' },
+  { value: 'electronics', label: '🔌 Electronics' },
+  { value: 'games',       label: '🎮 Games & Consoles' },
+  { value: 'miniatures',  label: '🚗 Diecast & Miniatures' },
+  { value: 'fashion',     label: '👔 Fashion & Accessories' },
+  { value: 'souvenirs',   label: '🎁 Souvenirs' },
 ] as const;
 
 export const CONDITIONS = ['New', 'Used', 'Working Junk', 'For Parts'] as const;
