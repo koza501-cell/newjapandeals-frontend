@@ -6,6 +6,7 @@ import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import SearchCommand from '@/components/SearchCommand';
 import CurrencyPicker from '@/components/CurrencyPicker';
+import { CATEGORIES } from '@/config/filter-config';
 
 const NAV_LINKS = [
   { href: '/products', label: 'Shop' },
@@ -16,12 +17,17 @@ const NAV_LINKS = [
   { href: '/contact',  label: 'Contact' },
 ];
 
+// Categories shown in Browse dropdown (excludes the empty "All Items" entry)
+const BROWSE_CATEGORIES = CATEGORIES.filter(c => c.value !== '');
+
 export default function Header() {
   const [mobileMenuOpen,   setMobileMenuOpen]   = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [scrolled,         setScrolled]         = useState(false);
   const [cartHovered,      setCartHovered]      = useState(false);
+  const [browseHovered,    setBrowseHovered]    = useState(false);
   const cartLeaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const browseLeaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { items, getItemCount, getSubtotal } = useCart();
   const { count: wishlistCount }             = useWishlist();
@@ -46,6 +52,14 @@ export default function Header() {
   };
   const handleCartLeave = () => {
     cartLeaveTimer.current = setTimeout(() => setCartHovered(false), 250);
+  };
+
+  const handleBrowseEnter = () => {
+    if (browseLeaveTimer.current) clearTimeout(browseLeaveTimer.current);
+    setBrowseHovered(true);
+  };
+  const handleBrowseLeave = () => {
+    browseLeaveTimer.current = setTimeout(() => setBrowseHovered(false), 250);
   };
 
   return (
@@ -88,6 +102,44 @@ export default function Header() {
               </div>
             </div>
           </Link>
+
+          {/* ── Browse Categories dropdown (desktop) ─────────────────── */}
+          <div
+            className="hidden md:block relative"
+            onMouseEnter={handleBrowseEnter}
+            onMouseLeave={handleBrowseLeave}
+          >
+            <button
+              type="button"
+              className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 hover:text-[#B50012] rounded-lg hover:bg-gray-50 transition-colors"
+              aria-haspopup="true"
+              aria-expanded={browseHovered}
+            >
+              Browse
+              <svg className={`w-3 h-3 transition-transform ${browseHovered ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 12 12" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5l3 3 3-3" />
+              </svg>
+            </button>
+            {browseHovered && (
+              <div className="absolute left-0 top-full mt-1 w-60 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-2">
+                <Link
+                  href="/products"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#B50012] transition-colors font-medium border-b border-gray-100 mb-1"
+                >
+                  All Items
+                </Link>
+                {BROWSE_CATEGORIES.map(cat => (
+                  <Link
+                    key={cat.value}
+                    href={`/products?category=${cat.value}`}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#B50012] transition-colors"
+                  >
+                    {cat.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* ── Centre: Search (desktop) ─────────────────────────────── */}
           <div className="hidden md:flex flex-1 max-w-lg mx-auto">
@@ -275,6 +327,24 @@ export default function Header() {
                   {link.label}
                 </Link>
               ))}
+
+              {/* Categories section in mobile drawer */}
+              <div className="mt-2 pt-2 border-t border-gray-100">
+                <p className="px-2 py-1 text-[11px] text-gray-400 uppercase tracking-wider font-semibold">
+                  Browse Categories
+                </p>
+                {BROWSE_CATEGORIES.map(cat => (
+                  <Link
+                    key={cat.value}
+                    href={`/products?category=${cat.value}`}
+                    onClick={closeAll}
+                    className="px-2 py-2 text-sm text-gray-700 hover:text-[#B50012] hover:bg-gray-50 rounded-lg transition-colors block"
+                  >
+                    {cat.label}
+                  </Link>
+                ))}
+              </div>
+
               <Link
                 href="/cart"
                 onClick={closeAll}
