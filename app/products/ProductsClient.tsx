@@ -48,7 +48,7 @@ function buildFilter(params: URLSearchParams): string {
   const parts: string[] = [BASE_FILTER];
 
   const category = params.get('category') ?? '';
-  if (category) parts.push(`category = '${esc(category)}'`);
+  if (category) parts.push(`categories = '${esc(category)}'`);
 
   const conditions = params.getAll('condition');
   if (conditions.length > 0) {
@@ -265,7 +265,7 @@ export default function ProductsClient() {
               sort:   [sort],
               limit:  PAGE_SIZE,
               offset,
-              facets: ['category', 'brand', 'condition', 'movement_type', 'gender', 'status'],
+              facets: ['categories', 'brand', 'condition', 'movement_type', 'gender', 'status'],
               attributesToRetrieve: ['id', 'slug', 'title', 'brand', 'condition', 'price_jpy', 'image_1', 'status'],
             }),
             signal: AbortSignal.timeout(8000),
