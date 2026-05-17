@@ -227,7 +227,7 @@ export default function FilterPanel({
             name="fp-category"
             value={cat.value}
             label={cat.label}
-            count={cat.value ? (facets?.category?.[cat.value] ?? undefined) : undefined}
+            count={cat.value ? (facets?.categories?.[cat.value] ?? undefined) : undefined}
             checked={category === cat.value}
             onChange={() => handleCategory(cat.value)}
           />
