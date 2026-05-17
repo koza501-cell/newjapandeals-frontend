@@ -448,23 +448,29 @@ export default function ProductPageClient() {
           <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
             <h2 className="font-bold text-xl mb-4">Description</h2>
             <DescriptionBlock raw={product.description_en} />
-            {/* Categories — plain text at bottom of description */}
-            {product.category_names && product.category_names.length > 0 && (
-              <p className="mt-6 pt-4 border-t border-gray-100 text-xs text-gray-500">
-                <span className="text-gray-400">Categories: </span>
-                {product.category_slugs?.map((slug, idx) => (
+          </div>
+        )}
+
+        {/* Categories — always render if any present (separate block) */}
+        {Array.isArray(product.category_slugs) && product.category_slugs.length > 0 && (
+          <div className="bg-white rounded-xl shadow-lg p-4 mt-4">
+            <p className="text-xs text-gray-500">
+              <span className="text-gray-400">Categories: </span>
+              {product.category_slugs.map((slug: string, idx: number) => {
+                const name = (product.category_names && product.category_names[idx]) || slug;
+                return (
                   <span key={slug}>
                     {idx > 0 && ', '}
                     <Link
                       href={`/products?category=${slug}`}
                       className="text-gray-600 hover:text-[#B50012] hover:underline"
                     >
-                      {product.category_names?.[idx]}
+                      {name}
                     </Link>
                   </span>
-                ))}
-              </p>
-            )}
+                );
+              })}
+            </p>
           </div>
         )}
 
