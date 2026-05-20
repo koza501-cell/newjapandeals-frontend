@@ -3,8 +3,15 @@ import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 10;
 
-const MEILI_HOST = process.env.MEILISEARCH_HOST;
-const MEILI_KEY  = process.env.MEILISEARCH_ADMIN_KEY;
+const MEILI_HOST    = process.env.MEILISEARCH_HOST;
+const MEILI_KEY     = process.env.MEILISEARCH_ADMIN_KEY;
+const REINDEX_URL   = 'https://api.newjapandeals.com/api/meili-reindex.php';
+const REINDEX_KEY   = 'njd_moltbot_2026_secretkey';
+
+const REQUIRED_FILTERABLE = [
+  'availability', 'brand', 'categories', 'category', 'condition',
+  'featured', 'gender', 'in_stock', 'movement_type', 'price_jpy', 'status',
+];
 
 function verifyCronSecret(req: NextRequest): boolean {
   const secret = process.env.CRON_SECRET;
@@ -49,19 +56,34 @@ export async function GET(req: NextRequest) {
     const hits: unknown[] = data.hits ?? [];
 
     if (hits.length === 0) {
-      console.error('[MEILI-HEARTBEAT-DOWN]', { error: 'index empty or corrupted', latency_ms });
-      return NextResponse.json({ ok: false, error: 'index returned 0 hits — may be empty or corrupted', latency_ms }, { status: 503 });
+      console.error('[MEILI-HEARTBEAT-DOWN]', { error: 'index empty — triggering reindex', latency_ms });
+      fetch(`${REINDEX_URL}?key=${REINDEX_KEY}`, { signal: AbortSignal.timeout(8000) }).catch(() => {});
+      return NextResponse.json({ ok: false, error: 'index empty — reindex triggered', latency_ms, action: 'reindex_triggered' }, { status: 503 });
     }
 
-    const result = { ok: true, latency_ms, hits_returned: hits.length };
-    console.log('[meili-heartbeat]', JSON.stringify(result));
+    // Check filterableAttributes — auto-heal if categories is missing
+    let settings_healed = false;
+    try {
+      const settingsRes = await fetch(`${MEILI_HOST}/indexes/products/settings`, {
+        headers: { 'Authorization': `Bearer ${MEILI_KEY}` },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (settingsRes.ok) {
+        const settings = await settingsRes.json();
+        const current: string[] = settings.filterableAttributes ?? [];
+        const missing = REQUIRED_FILTERABLE.filter(a => !current.includes(a));
+        if (missing.length > 0) {
+          console.error('[meili-heartbeat] Missing filterableAttributes:', missing, '— triggering reindex');
+          fetch(`${REINDEX_URL}?key=${REINDEX_KEY}`, { signal: AbortSignal.timeout(8000) }).catch(() => {});
+          settings_healed = true;
+        }
+      }
+    } catch {
+      // non-fatal — heartbeat still reports ok
+    }
 
-    // TODO: on 503 above, add a notification channel — pick one:
-    //   - Discord webhook: POST to DISCORD_WEBHOOK_URL env var (free, instant)
-    //   - Slack webhook:   POST to SLACK_WEBHOOK_URL env var (free, instant)
-    //   - Healthchecks.io: GET  to HEALTHCHECKS_PING_URL env var (free, ping-based)
-    //   - Better Uptime:   free tier — add external HTTP monitor pointing at this route
-    //   - UptimeRobot:     free tier — 50 monitors, HTTP(s) type, 5-min interval
+    const result = { ok: true, latency_ms, hits_returned: hits.length, settings_healed };
+    console.log('[meili-heartbeat]', JSON.stringify(result));
 
     return NextResponse.json(result);
   } catch (err) {
