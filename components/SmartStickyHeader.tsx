@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useBuyBar } from '@/context/BuyBarContext';
+import { normalizeConditionLabel, conditionTooltip } from '@/lib/utils';
 import SearchCommand from '@/components/SearchCommand';
 import CurrencyPicker from '@/components/CurrencyPicker';
 import { CATEGORIES } from '@/config/filter-config';
@@ -114,7 +115,7 @@ export default function SmartStickyHeader() {
                   ? router.back()
                   : router.push('/products')
               }
-              className="flex-shrink-0 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex-shrink-0 p-1.5 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="Go back to previous page"
             >
               <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -146,8 +147,11 @@ export default function SmartStickyHeader() {
                 {buyBarProduct.title}
               </span>
               {buyBarProduct.condition && (
-                <span className="text-xs text-gray-500 truncate leading-tight">
-                  {buyBarProduct.condition}
+                <span
+                  className="text-xs text-gray-500 truncate leading-tight"
+                  title={conditionTooltip(normalizeConditionLabel(buyBarProduct.condition))}
+                >
+                  {normalizeConditionLabel(buyBarProduct.condition)}
                 </span>
               )}
             </div>
@@ -300,7 +304,7 @@ export default function SmartStickyHeader() {
               {/* Mobile search icon */}
               <button
                 onClick={() => { setMobileSearchOpen(v => !v); setMobileMenuOpen(false); }}
-                className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                 aria-label="Open search"
               >
                 <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">

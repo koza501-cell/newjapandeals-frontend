@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import FilterPanel from '@/components/FilterPanel';
 import { useCurrency } from '@/context/CurrencyContext';
 import {
@@ -13,6 +14,7 @@ import {
   DEFAULT_SORT,
   PAGE_SIZE,
 } from '@/config/filter-config';
+import { normalizeConditionLabel, conditionTooltip } from '@/lib/utils';
 
 const MEILI_HOST = process.env.NEXT_PUBLIC_MEILISEARCH_HOST;
 const MEILI_KEY  = process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY;
@@ -102,12 +104,12 @@ function ProductCard({ product }: { product: MeiliProduct }) {
     >
       <div className="relative aspect-square overflow-hidden bg-gray-100 flex-shrink-0">
         {product.image_1 ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={product.image_1}
             alt={`${product.brand} ${product.title}`}
-            className={`h-full w-full object-cover transition-transform duration-300 ${isSold ? '' : 'group-hover:scale-105'}`}
-            loading="lazy"
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className={`object-cover transition-transform duration-300 ${isSold ? '' : 'group-hover:scale-105'}`}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-4xl text-gray-300">⌚</div>
@@ -120,8 +122,11 @@ function ProductCard({ product }: { product: MeiliProduct }) {
           </div>
         )}
         {product.condition && !isSold && (
-          <span className="absolute left-2 top-2 rounded bg-white/90 px-2 py-0.5 text-xs font-medium text-gray-800 backdrop-blur-sm">
-            {product.condition}
+          <span
+            className="absolute left-2 top-2 rounded bg-white/90 px-2 py-0.5 text-xs font-medium text-gray-800 backdrop-blur-sm"
+            title={conditionTooltip(normalizeConditionLabel(product.condition))}
+          >
+            {normalizeConditionLabel(product.condition)}
           </span>
         )}
       </div>

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Product, formatPrice } from '@/lib/api';
+import { normalizeConditionLabel, conditionTooltip } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -19,7 +20,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             src={imageUrl}
             alt={`${product.title_en} - ${product.brand || 'Japanese Watch'}`}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className={`object-cover transition-transform duration-300 ${isSold ? 'grayscale' : 'hover:scale-105'}`}
             priority={priority}
           />
@@ -33,8 +34,11 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           )}
           
           {product.condition && !isSold && (
-            <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium">
-              {product.condition}
+            <span
+              className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium"
+              title={conditionTooltip(normalizeConditionLabel(product.condition))}
+            >
+              {normalizeConditionLabel(product.condition)}
             </span>
           )}
           

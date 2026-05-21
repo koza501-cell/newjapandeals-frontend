@@ -3,9 +3,11 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { useBuyBar } from '@/context/BuyBarContext';
 import { sanitizeText } from '@/lib/sanitize';
+import { normalizeConditionLabel, conditionTooltip } from '@/lib/utils';
 
 const API_URL = 'https://api.newjapandeals.com';
 
@@ -327,28 +329,35 @@ export default function ProductPageClient() {
     { label: 'Year', value: product.year_of_production }, { label: 'Box & Papers', value: product.box_papers ? 'Yes' : 'No' },
   ].filter(spec => spec.value && spec.value !== 'No');
   return (
-    <main className="bg-gray-50 min-h-screen py-8">
+    <main className="bg-gray-50 min-h-screen pt-8 pb-24 md:pb-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <div className="container mx-auto px-4 max-w-6xl">
 
         {/* Breadcrumb */}
         <nav aria-label="breadcrumb" className="text-sm mb-6">
-          <Link href="/" className="text-gray-500 hover:text-red-600">Home</Link>
+          <Link href="/" className="text-gray-500 hover:text-red-600 py-2 inline-block">Home</Link>
           <span className="mx-2 text-gray-400">/</span>
-          <Link href="/products" className="text-gray-500 hover:text-red-600">Products</Link>
+          <Link href="/products" className="text-gray-500 hover:text-red-600 py-2 inline-block">Products</Link>
           <span className="mx-2 text-gray-400">/</span>
-          <Link href={`/brand/${product.brand.toLowerCase()}`} className="text-gray-500 hover:text-red-600">{product.brand}</Link>
+          <Link href={`/brand/${product.brand.toLowerCase()}`} className="text-gray-500 hover:text-red-600 py-2 inline-block">{product.brand}</Link>
           <span className="mx-2 text-gray-400">/</span>
           <span className="text-gray-800" aria-current="page">{product.brand} {product.model}</span>
         </nav>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-8">
           {/* Images */}
           <div>
             <div ref={imageContainerRef} className="bg-white rounded-xl shadow-lg overflow-hidden mb-4">
-              <div className="aspect-square relative">
+              <div className="aspect-square relative max-h-[75vw] sm:max-h-none">
                 {currentImage ? (
-                  <img src={currentImage} alt={primaryAlt} className="w-full h-full object-contain" />
+                  <Image
+                    src={currentImage}
+                    alt={primaryAlt}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-contain"
+                    priority
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-100 text-6xl text-gray-300">⌚</div>
                 )}
@@ -360,7 +369,12 @@ export default function ProductPageClient() {
                   </div>
                 )}
                 {product.condition && product.status !== 'sold' && (
-                  <span className="absolute top-4 left-4 bg-black/80 text-white px-3 py-1 rounded-full text-sm">{product.condition}</span>
+                  <span
+                    className="absolute top-4 left-4 bg-black/80 text-white px-3 py-1 rounded-full text-sm"
+                    title={conditionTooltip(normalizeConditionLabel(product.condition))}
+                  >
+                    {normalizeConditionLabel(product.condition)}
+                  </span>
                 )}
               </div>
             </div>
@@ -368,7 +382,7 @@ export default function ProductPageClient() {
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {images.map((img, idx) => (
                   <button key={idx} onClick={() => setSelectedImage(idx)} className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${selectedImage === idx ? 'border-red-600' : 'border-transparent'}`}>
-                    <img src={img} alt={viewAlt(idx + 1)} className="w-full h-full object-cover" />
+                    <Image src={img} alt={viewAlt(idx + 1)} width={80} height={80} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -376,7 +390,7 @@ export default function ProductPageClient() {
           </div>
 
           {/* Info */}
-          <div className="space-y-6">
+          <div className="space-y-6 md:sticky md:top-24 md:self-start">
             <div>
               <p className="text-red-600 font-medium mb-1">{product.brand}</p>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
@@ -488,7 +502,7 @@ export default function ProductPageClient() {
               {specs.map((spec, idx) => (
                 <div key={idx} className="flex justify-between py-2 border-b border-gray-100">
                   <span className="text-gray-600">{spec.label}</span>
-                  <span className="font-medium text-gray-900">{spec.value}</span>
+                  <span className="font-medium text-gray-900 break-words text-right ml-2 max-w-[60%]">{spec.value}</span>
                 </div>
               ))}
             </div>
@@ -517,9 +531,14 @@ export default function ProductPageClient() {
                   <Link key={rp.slug} href={`/product/${rp.slug}`} className="bg-white rounded-xl shadow hover:shadow-md transition-shadow overflow-hidden group">
                     <div className="aspect-square bg-gray-100">
                       {rpImage ? (
-                        <img src={rpImage}
+                        <Image
+                          src={rpImage}
                           alt={`${rp.brand} ${rp.model}${rp.reference_number ? ' ' + rp.reference_number : ''} — New Japan Deals`}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          width={300}
+                          height={300}
+                          sizes="(max-width: 768px) 50vw, 25vw"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-3xl text-gray-300">⌚</div>
                       )}
@@ -549,6 +568,33 @@ export default function ProductPageClient() {
           </div>
         </div>
       </div>
+
+      {/* Mobile sticky bottom bar — hidden md+ */}
+      {product.status !== 'sold' && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t border-gray-200 shadow-lg px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs text-gray-500">Total</p>
+              <p className="text-lg font-bold text-gray-900">¥{totalPrice.toLocaleString()}</p>
+            </div>
+            {isInCart ? (
+              <Link
+                href="/cart"
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2"
+              >
+                ✓ View Cart
+              </Link>
+            ) : (
+              <button
+                onClick={handleAddToCart}
+                className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-bold text-sm"
+              >
+                🛒 Add to Cart
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

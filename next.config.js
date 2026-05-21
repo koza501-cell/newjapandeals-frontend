@@ -5,7 +5,14 @@ const nextConfig = {
   
   // Image optimization
   images: {
-    domains: ['api.newjapandeals.com', 'static.mercdn.net', 'images.unsplash.com'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'api.newjapandeals.com' },
+      { protocol: 'https', hostname: 'newjapandeals.com' },
+      { protocol: 'https', hostname: 'www.newjapandeals.com' },
+      { protocol: 'https', hostname: 'mercdn.static.mercdn.net' },
+      { protocol: 'https', hostname: 'static.mercdn.net' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+    ],
     formats: ['image/avif', 'image/webp'],
   },
   
