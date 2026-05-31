@@ -45,8 +45,8 @@ export default async function Home() {
       {/* Promotional Banner (if active) */}
       <PromoBanner />
 
-      {/* Compact trust ribbon — sticky top strip */}
-      <TrustBar />
+      {/* HIDDEN: consolidated into TrustRibbon marquee in layout.tsx — remove after testing */}
+      {/* <TrustBar /> */}
 
       {/* Hero Section */}
       <Hero />

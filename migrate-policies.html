@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NJD Policy Migration</title>
+<style>
+body { font-family: -apple-system, sans-serif; max-width: 1200px; margin: 20px auto; padding: 20px; background: #f5f7fa; color: #1a365d; }
+h1 { color: #1a365d; border-bottom: 3px solid #1a365d; padding-bottom: 8px; }
+.stats { display: flex; gap: 16px; margin: 20px 0; }
+.stat { background: white; padding: 12px 18px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); flex: 1; }
+.stat .label { font-size: 11px; color: #888; text-transform: uppercase; }
+.stat .value { font-size: 28px; font-weight: 700; color: #1a365d; margin-top: 4px; }
+.stat.migrate .value { color: #2d6a4f; }
+.stat.skip .value { color: #c4302b; }
+button { background: #1a365d; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-size: 14px; margin-right: 8px; }
+button:hover { background: #2c4a7c; }
+button:disabled { background: #999; cursor: not-allowed; }
+button.danger { background: #c4302b; }
+button.success { background: #2d6a4f; }
+table { width: 100%; border-collapse: collapse; background: white; margin-top: 16px; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+th { background: #1a365d; color: white; padding: 10px 8px; text-align: left; font-size: 12px; }
+td { padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; }
+tr:hover { background: #f9fafb; }
+.row-skip { background: #fff5f5; }
+.row-done { background: #e6ffed; }
+.row-error { background: #ffebee; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.tag-old { background: #ffebcc; color: #b54708; }
+.tag-new { background: #d1f4e0; color: #2d6a4f; }
+.tag-skip { background: #ffcccc; color: #c4302b; }
+.tag-done { background: #2d6a4f; color: white; }
+.tag-error { background: #c4302b; color: white; }
+#progress { margin: 10px 0; padding: 8px 12px; background: #fff3cd; border-left: 4px solid #f59e0b; display: none; }
+#log { background: #1a1a2e; color: #0f0; padding: 10px; font-family: monospace; font-size: 11px; max-height: 200px; overflow-y: scroll; margin-top: 10px; border-radius: 6px; display: none; }
+</style>
+</head>
+<body>
+<h1>🚀 NJD Policy Migration Tool</h1>
+<p>Migrates eBay listings from legacy policies (NJD-Worldwide-*, NJD-WW-*) to <strong>NJD-USA-300g-{A/B/C/D}</strong> based on item price.</p>
+
+<div>
+  <button onclick="loadPreview()">1. Load Preview</button>
+  <button onclick="migrateOne()" id="migrateOneBtn" disabled>2. Test Migrate (1 listing)</button>
+  <button onclick="migrateAll()" id="migrateAllBtn" class="danger" disabled>3. Migrate ALL Remaining</button>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="label">Total Listings</div><div class="value" id="totalCount">—</div></div>
+  <div class="stat migrate"><div class="label">To Migrate</div><div class="value" id="migrateCount">—</div></div>
+  <div class="stat skip"><div class="label">Skip ($200+)</div><div class="value" id="skipCount">—</div></div>
+  <div class="stat"><div class="label">Already Gen 3</div><div class="value" id="gen3Count">—</div></div>
+</div>
+
+<div id="progress"></div>
+<div id="log"></div>
+<table id="resultsTable" style="display:none;">
+  <thead>
+    <tr>
+      <th>SKU</th><th>Title</th><th>Price</th><th>Old Policy</th><th>New Policy</th><th>Action</th><th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="resultsBody"></tbody>
+</table>
+
+<script>
+const KEY = 'njd_moltbot_2026_secretkey';
+let candidates = [];
+let skipList = [];
+
+function log(msg) {
+  const el = document.getElementById('log');
+  el.style.display = 'block';
+  el.innerHTML += new Date().toLocaleTimeString() + ' — ' + msg + '\n';
+  el.scrollTop = el.scrollHeight;
+}
+
+async function loadPreview() {
+  document.getElementById('progress').style.display = 'block';
+  document.getElementById('progress').textContent = 'Loading eBay offers...';
+
+  try {
+    const r = await fetch(`migrate-policies.php?action=preview&key=${KEY}`);
+    const data = await r.json();
+
+    candidates = data.migration_candidates || [];
+    skipList = data.skip_high_price || [];
+
+    document.getElementById('totalCount').textContent = data.total_listings;
+    document.getElementById('migrateCount').textContent = candidates.length;
+    document.getElementById('skipCount').textContent = skipList.length;
+    document.getElementById('gen3Count').textContent = data.already_gen3;
+
+    renderTable();
+
+    document.getElementById('migrateOneBtn').disabled = candidates.length === 0;
+    document.getElementById('migrateAllBtn').disabled = candidates.length === 0;
+    document.getElementById('progress').style.display = 'none';
+    log(`Loaded: ${candidates.length} to migrate, ${skipList.length} to skip`);
+  } catch (e) {
+    document.getElementById('progress').textContent = 'Error: ' + e.message;
+  }
+}
+
+function renderTable() {
+  document.getElementById('resultsTable').style.display = 'table';
+  const tbody = document.getElementById('resultsBody');
+  tbody.innerHTML = '';
+
+  [...candidates, ...skipList].forEach(row => {
+    const tr = document.createElement('tr');
+    tr.id = 'row-' + row.itemId;
+    if (row.action === 'SKIP') tr.classList.add('row-skip');
+    tr.innerHTML = `
+      <td>${row.sku}</td>
+      <td>${row.title || '—'}</td>
+      <td>${row.price.toFixed(2)}</td>
+      <td><span class="tag tag-old">${row.old_policy_name}</span></td>
+      <td>${row.new_policy_name ? `<span class="tag tag-new">${row.new_policy_name}</span>` : `<span class="tag tag-skip">skip</span>`}</td>
+      <td>${row.action === 'SKIP' ? `<span class="tag tag-skip">SKIP</span>` : `<span class="tag tag-old">MIGRATE</span>`}</td>
+      <td id="status-${row.itemId}">${row.action === 'SKIP' ? row.reason : '—'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function migrateOne() {
+  if (candidates.length === 0) return;
+  const c = candidates[0];
+  if (!confirm(`Test migrate FIRST listing only:\n\nSKU: ${c.sku}\nTitle: ${c.title}\nPrice: ${c.price}\n\nFrom: ${c.old_policy_name}\nTo: ${c.new_policy_name}\n\nProceed?`)) return;
+
+  log(`Migrating test offer ${c.itemId} (${c.sku})...`);
+  document.getElementById('status-' + c.itemId).innerHTML = '<span class="tag tag-old">working...</span>';
+
+  const result = await migrateOffer(c);
+  if (result.success) {
+    log(`✓ Test success for ${c.sku}`);
+    document.getElementById('row-' + c.itemId).classList.add('row-done');
+    document.getElementById('status-' + c.itemId).innerHTML = '<span class="tag tag-done">✓ DONE</span>';
+    candidates.shift();
+    document.getElementById('migrateCount').textContent = candidates.length;
+    alert('Test migration done — VERIFY ON EBAY before clicking "Migrate ALL Remaining".');
+  } else {
+    log(`✗ Test failed: ${JSON.stringify(result)}`);
+    document.getElementById('row-' + c.itemId).classList.add('row-error');
+    document.getElementById('status-' + c.itemId).innerHTML = '<span class="tag tag-error">✗ FAIL</span>';
+    alert('Test failed. Check log. Do NOT proceed with bulk migration.');
+  }
+}
+
+async function migrateAll() {
+  if (candidates.length === 0) return;
+  if (!confirm(`Migrate ALL ${candidates.length} remaining listings to NJD-USA-300g-* policies?\n\nThis is irreversible without manual fix.`)) return;
+
+  log(`Starting bulk migration of ${candidates.length} listings...`);
+  document.getElementById('migrateAllBtn').disabled = true;
+
+  let success = 0, fail = 0;
+  for (let i = 0; i < candidates.length; i++) {
+    const c = candidates[i];
+    document.getElementById('progress').style.display = 'block';
+    document.getElementById('progress').textContent = `Migrating ${i+1}/${candidates.length}: ${c.sku}...`;
+    document.getElementById('status-' + c.itemId).innerHTML = '<span class="tag tag-old">working...</span>';
+
+    const result = await migrateOffer(c);
+    if (result.success) {
+      success++;
+      log(`✓ ${i+1}/${candidates.length} ${c.sku} → ${c.new_policy_name}`);
+      document.getElementById('row-' + c.itemId).classList.add('row-done');
+      document.getElementById('status-' + c.itemId).innerHTML = '<span class="tag tag-done">✓ DONE</span>';
+    } else {
+      fail++;
+      log(`✗ ${i+1}/${candidates.length} ${c.sku} FAILED: ${result.error || JSON.stringify(result.body)}`);
+      document.getElementById('row-' + c.itemId).classList.add('row-error');
+      document.getElementById('status-' + c.itemId).innerHTML = '<span class="tag tag-error">✗ ' + (result.error || 'fail') + '</span>';
+    }
+
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  document.getElementById('progress').textContent = `Done: ${success} success, ${fail} failed`;
+  log(`=== COMPLETE: ${success} migrated, ${fail} failed ===`);
+}
+
+async function migrateOffer(c) {
+  try {
+    const fd = new FormData();
+    fd.append('action', 'migrate-one');
+    fd.append('key', KEY);
+    fd.append('sku', c.sku);
+    fd.append('itemId', c.itemId);   // keep itemId for UI display
+    fd.append('newPolicyId', c.new_policy_id);
+    const r = await fetch('migrate-policies.php', { method: 'POST', body: fd });
+    return await r.json();
+  } catch (e) {
+    return { error: e.message };
+  }
+}
+</script>
+</body>
+</html>

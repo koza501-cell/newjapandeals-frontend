@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { normalizeConditionLabel, conditionTooltip } from '@/lib/utils';
 
 const API_URL = 'https://api.newjapandeals.com';
 
@@ -144,8 +145,11 @@ export default function FeaturedProducts() {
 
                   {/* Condition Badge */}
                   {product.condition && !isSold && (
-                    <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                      {product.condition}
+                    <div
+                      className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded"
+                      title={conditionTooltip(normalizeConditionLabel(product.condition))}
+                    >
+                      {normalizeConditionLabel(product.condition)}
                     </div>
                   )}
                 </div>

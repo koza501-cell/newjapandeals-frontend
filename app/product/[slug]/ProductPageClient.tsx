@@ -179,6 +179,7 @@ interface Product {
   weight_g: number; mercari_url: string; image?: string; images?: string[];
   status: string; shipping_category_id: number | null;
   category_slugs?: string[]; category_names?: string[];
+  is_vintage?: boolean; is_lot?: boolean; lot_quantity?: number;
 }
 
 const FAQ_ITEMS = [
@@ -396,6 +397,23 @@ export default function ProductPageClient() {
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                 {sanitizeText(product.title_en || product.title || `${product.brand} ${product.model}`)}
               </h1>
+              {(product.is_vintage || product.is_lot) && (
+                <div className="flex gap-2 mt-2">
+                  {product.is_vintage && (
+                    <span className="bg-amber-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">Vintage</span>
+                  )}
+                  {product.is_lot && (
+                    <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+                      {product.lot_quantity && product.lot_quantity > 1 ? `Lot of ${product.lot_quantity}` : 'Lot'}
+                    </span>
+                  )}
+                </div>
+              )}
+              {product.is_lot && product.lot_quantity && product.lot_quantity > 1 && (
+                <p className="text-sm text-purple-700 mt-2 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2">
+                  This listing includes {product.lot_quantity} items.
+                </p>
+              )}
               {product.title_jp && <p className="text-gray-500 mt-1">{sanitizeText(product.title_jp)}</p>}
               <p className="text-sm text-gray-400 mt-2">SKU: {product.sku}</p>
             </div>

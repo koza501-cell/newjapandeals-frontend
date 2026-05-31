@@ -101,10 +101,10 @@ function MercariCard({ stats, reduced }: { stats: TrustStats; reduced: boolean }
           <div className="text-xs text-gray-400 mb-1.5" aria-hidden="true">
             {combined.reviewCount.toLocaleString()} reviews
           </div>
-          <div className="text-[11px] uppercase tracking-wider font-semibold text-gray-500">
+          <div className="text-xs uppercase tracking-wider font-semibold text-gray-500">
             Mercari Japan
           </div>
-          <div className="text-[10px] text-gray-400 mt-0.5">across 2 verified seller accounts</div>
+          <div className="text-xs text-gray-500 mt-0.5">across 2 verified seller accounts</div>
         </button>
       </Popover.Trigger>
 
@@ -165,10 +165,10 @@ function LevelCard({ stats, reduced }: { stats: TrustStats; reduced: boolean }) 
         <span className="text-2xl mb-2 leading-none" role="img" aria-label="Trophy">🏆</span>
         <AnimatedNumber value={seller} decimals={0} reduced={reduced} />
         <div className="text-xs text-gray-400 mb-1.5" aria-hidden="true">Top 1% on Mercari</div>
-        <div className="text-[11px] uppercase tracking-wider font-semibold text-gray-500">
+        <div className="text-xs uppercase tracking-wider font-semibold text-gray-500">
           Level {seller} Seller
         </div>
-        <div className="text-[10px] text-gray-400 mt-0.5">Mercari's top seller tier</div>
+        <div className="text-xs text-gray-500 mt-0.5">Mercari's top seller tier</div>
       </a>
     );
   }
@@ -186,7 +186,7 @@ function LevelCard({ stats, reduced }: { stats: TrustStats; reduced: boolean }) 
       <span className="text-2xl mb-2 leading-none" role="img" aria-label="Verified badge">✅</span>
       <div className="text-xl font-bold text-[#1A1A1A] leading-none mb-1">本人確認済</div>
       <div className="text-xs text-gray-400 mb-1.5" aria-hidden="true">Identity Verified</div>
-      <div className="text-[11px] uppercase tracking-wider font-semibold text-gray-500">
+      <div className="text-xs uppercase tracking-wider font-semibold text-gray-500">
         Verified Seller
       </div>
     </a>
@@ -220,7 +220,7 @@ function SimpleCard({ stat, icon, iconLabel, value, label, subtext, href, reduce
       {subtext && (
         <div className="text-xs text-gray-400 mb-1.5" aria-hidden="true">{subtext}</div>
       )}
-      <div className="text-[11px] uppercase tracking-wider font-semibold text-gray-500">{label}</div>
+      <div className="text-xs uppercase tracking-wider font-semibold text-gray-500">{label}</div>
     </a>
   );
 }

@@ -47,6 +47,18 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               Featured
             </span>
           )}
+
+          {product.is_vintage && !isSold && (
+            <span className="absolute bottom-3 left-3 bg-amber-600 text-white px-2 py-1 rounded text-xs font-bold uppercase tracking-wide">
+              Vintage
+            </span>
+          )}
+
+          {product.is_lot && !isSold && (
+            <span className="absolute bottom-3 right-3 bg-purple-600 text-white px-2 py-1 rounded text-xs font-bold uppercase tracking-wide">
+              {product.lot_quantity && product.lot_quantity > 1 ? `Lot ×${product.lot_quantity}` : 'Lot'}
+            </span>
+          )}
         </div>
 
         <div className="p-4">

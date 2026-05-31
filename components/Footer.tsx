@@ -26,7 +26,8 @@ export default function Footer() {
               <li><Link href="/brand/casio" className="hover:text-gold transition-colors">Casio Watches</Link></li>
               <li><Link href="/brand/g-shock" className="hover:text-gold transition-colors">G-Shock Watches</Link></li>
               <li><Link href="/brand/orient" className="hover:text-gold transition-colors">Orient Watches</Link></li>
-              <li><Link href="/brand/vintage" className="hover:text-gold transition-colors">Vintage Watches</Link></li>
+              <li><Link href="/vintage" className="hover:text-gold transition-colors">Vintage Watches</Link></li>
+              <li><Link href="/lot" className="hover:text-gold transition-colors">Watch Lots</Link></li>
               <li><Link href="/watches" className="hover:text-gold transition-colors">Browse by Category</Link></li>
             </ul>
           </nav>

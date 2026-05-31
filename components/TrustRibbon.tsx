@@ -14,7 +14,7 @@ const PILLS = [
 export default function TrustRibbon() {
   return (
     <div
-      className="bg-[#1A1A1A] overflow-hidden"
+      className="bg-[#1A1A1A] overflow-hidden trust-marquee-container"
       style={{ height: '28px' }}
     >
       {/* aria-hidden: purely decorative, info duplicated in footer/header badge */}
@@ -23,7 +23,7 @@ export default function TrustRibbon() {
         {[...PILLS, ...PILLS].map((pill, i) => (
           <span
             key={i}
-            className="flex items-center gap-1.5 whitespace-nowrap px-4 text-[11px] font-medium text-gray-300"
+            className="flex items-center gap-1.5 whitespace-nowrap px-4 text-xs font-medium text-gray-300"
           >
             <span>{pill.emoji}</span>
             <span>{pill.text}</span>

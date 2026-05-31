@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { normalizeConditionLabel } from '@/lib/utils';
 
 interface SearchProduct {
   id: number;
@@ -351,7 +352,7 @@ export default function SearchCommand({ onClose, autoFocus, className, handleGlo
                           {p.brand} {p.model}{p.reference_number ? ` ${p.reference_number}` : ''}
                         </div>
                         <div className="text-xs text-gray-400">
-                          ¥{p.price_jpy?.toLocaleString()} · {p.condition}
+                          ¥{p.price_jpy?.toLocaleString()} · {normalizeConditionLabel(p.condition)}
                         </div>
                       </div>
                     </Link>

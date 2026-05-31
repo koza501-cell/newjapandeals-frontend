@@ -51,7 +51,7 @@ function SoldCard({ product }: { product: SoldProduct }) {
       </div>
       <div className="flex flex-1 flex-col p-3.5">
         {product.brand && (
-          <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+          <p className="mb-0.5 text-xs font-semibold uppercase tracking-widest text-gray-400">
             {product.brand}
           </p>
         )}

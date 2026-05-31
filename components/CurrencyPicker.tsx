@@ -25,7 +25,7 @@ export default function CurrencyPicker() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm rounded-lg hover:bg-gray-100 transition-colors text-gray-700 font-medium"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm rounded-lg hover:bg-gray-100 transition-colors text-gray-700 font-medium min-h-[44px]"
         aria-label={`Currency: ${currencyInfo.name}. Click to change.`}
         aria-expanded={open}
         aria-haspopup="listbox"

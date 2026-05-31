@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCurrency } from '@/context/CurrencyContext';
+import { normalizeConditionLabel, conditionTooltip } from '@/lib/utils';
 
 interface FeaturedWatchCardProps {
   slug: string;
@@ -49,8 +50,11 @@ export default function FeaturedWatchCard({
         )}
         {/* Condition badge */}
         {condition && (
-          <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-medium px-2 py-1 rounded">
-            {condition}
+          <span
+            className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-medium px-2 py-1 rounded"
+            title={conditionTooltip(normalizeConditionLabel(condition))}
+          >
+            {normalizeConditionLabel(condition)}
           </span>
         )}
       </Link>

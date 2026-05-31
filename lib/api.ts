@@ -35,6 +35,14 @@ export interface Product {
   meta_description?: string;
   created_at: string;
   mercari_url?: string;
+  is_vintage?: boolean;
+  is_lot?: boolean;
+  lot_quantity?: number;
+  slug?: string;
+  brand?: string;
+  model?: string;
+  category_slugs?: string[];
+  category_names?: string[];
 }
 
 export interface Category {

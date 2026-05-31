@@ -70,7 +70,7 @@ export default async function NewArrivalsSection() {
               condition={product.condition ?? ''}
               price_jpy={product.price_jpy ?? 0}
               imageUrl={product.image_1}
-              priority={index < 2}
+              priority={false}
             />
           ))}
         </div>

@@ -10,6 +10,8 @@ import { CATEGORIES } from '@/config/filter-config';
 
 const NAV_LINKS = [
   { href: '/products', label: 'Shop' },
+  { href: '/vintage',  label: 'Vintage' },
+  { href: '/lot',      label: 'Lots' },
   { href: '/why-us',   label: 'Why Us' },
   { href: '/blog',     label: 'Blog' },
   { href: '/about',    label: 'About' },
@@ -89,13 +91,13 @@ export default function Header() {
               {/* Micro-badge — visible sm+ */}
               <div className="hidden sm:block relative group">
                 <span
-                  className="text-[10px] text-gray-400 border-b border-dotted border-gray-300 cursor-default"
+                  className="text-xs text-gray-400 border-b border-dotted border-gray-300 cursor-default"
                   title="古物商許可 第441200001622号 — Licensed antique dealer, Chiba Japan, since 2014"
                 >
                   Licensed Dealer · 古物商 #441200001622
                 </span>
                 {/* Hover tooltip */}
-                <div className="absolute left-0 top-5 w-56 bg-[#1A1A1A] text-white text-[11px] leading-snug rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-10 shadow-lg">
+                <div className="absolute left-0 top-5 w-56 bg-[#1A1A1A] text-white text-xs leading-snug rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-10 shadow-lg">
                   古物商許可 第441200001622号<br />
                   Licensed antique dealer in Chiba, Japan since 2014.
                 </div>
@@ -157,7 +159,7 @@ export default function Header() {
             {/* Mobile search icon */}
             <button
               onClick={() => { setMobileSearchOpen(v => !v); setMobileMenuOpen(false); }}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px]"
               aria-label="Open search"
             >
               <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -169,7 +171,7 @@ export default function Header() {
             {/* Wishlist heart — visible sm+ */}
             <Link
               href="/products"
-              className="relative hidden sm:flex p-2 rounded-lg hover:bg-gray-100 transition-colors items-center"
+              className="relative hidden sm:flex p-2 rounded-lg hover:bg-gray-100 transition-colors items-center min-h-[44px] min-w-[44px]"
               aria-label={`Wishlist — ${wishlistCount} saved item${wishlistCount !== 1 ? 's' : ''}`}
             >
               <svg
@@ -201,7 +203,7 @@ export default function Header() {
             >
               <Link
                 href="/cart"
-                className="relative flex p-2 rounded-lg hover:bg-gray-100 transition-colors items-center"
+                className="relative flex p-2 rounded-lg hover:bg-gray-100 transition-colors items-center min-h-[44px] min-w-[44px]"
                 aria-label={`Shopping cart — ${itemCount} item${itemCount !== 1 ? 's' : ''}`}
               >
                 <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -210,7 +212,7 @@ export default function Header() {
                 </svg>
                 {itemCount > 0 && (
                   <span
-                    className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-[#B50012] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1"
+                    className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-[#B50012] text-white text-xs font-bold rounded-full flex items-center justify-center px-1"
                     aria-hidden="true"
                   >
                     {itemCount > 9 ? '9+' : itemCount}
@@ -281,7 +283,7 @@ export default function Header() {
             {/* Hamburger — mobile */}
             <button
               onClick={() => { setMobileMenuOpen(v => !v); setMobileSearchOpen(false); }}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px]"
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
@@ -330,7 +332,7 @@ export default function Header() {
 
               {/* Categories section in mobile drawer */}
               <div className="mt-2 pt-2 border-t border-gray-100">
-                <p className="px-2 py-1 text-[11px] text-gray-400 uppercase tracking-wider font-semibold">
+                <p className="px-2 py-1 text-xs text-gray-400 uppercase tracking-wider font-semibold">
                   Browse Categories
                 </p>
                 {BROWSE_CATEGORIES.map(cat => (
@@ -360,7 +362,7 @@ export default function Header() {
               </Link>
               {/* Currency picker in mobile menu */}
               <div className="px-2 pt-3 mt-1 border-t border-gray-100">
-                <p className="text-[11px] text-gray-400 uppercase tracking-wider font-semibold mb-1.5">
+                <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1.5">
                   Currency
                 </p>
                 <CurrencyPicker />
