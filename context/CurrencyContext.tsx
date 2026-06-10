@@ -75,8 +75,8 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     if (saved && CURRENCIES.some(c => c.code === saved)) {
       setCurrencyState(saved);
     } else {
-      // 2. Auto-detect from IP
-      fetch('https://ipapi.co/json/')
+      // 2. Auto-detect from IP via server-side geo route (avoids CORS/rate-limits)
+      fetch('/api/geo')
         .then(r => r.json())
         .then((data: { country_code?: string }) => {
           const detected = data.country_code
